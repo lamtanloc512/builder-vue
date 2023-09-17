@@ -1,55 +1,43 @@
 <script setup lang="ts">
-import grapesjs, {Editor} from 'grapesjs'
-import {ref, onMounted, onUnmounted, watch} from "vue";
-import TextArea from "./components/TextArea.vue";
 import {Layout, LayoutHeader, LayoutContent, LayoutSider} from "@arco-design/web-vue";
-import {customSelectorUI} from './events/selectorCustom.ts'
+import {useEditor} from './composables/editor.ts'
+import {provide} from "vue";
+import {PanelUI} from './components/index.ts'
+import {Slider} from './plugins/StyleManager/index.ts'
 
-const editor = ref<Partial<Editor>>();
-const sidePanelId = 'side-panel'
-const panelAppRef = ref();
-onMounted(() => {
-  editor.value = grapesjs.init({
-    container: "#editorPreview",
-    fromElement: true,
-    height: '300px',
-    width: 'auto',
-    storageManager: false,
-    panels: {defaults: []},
-    selectorManager: {
-      componentFirst: true,
-      custom: true,
-    }
-  })
-  customSelectorUI(sidePanelId, panelAppRef, editor.value)
+const {editor, connect} = useEditor()
 
-})
+const handleConnect = (el) => {
+  connect(el)
+}
 
-onUnmounted(() => {
-})
-
+provide('editor', editor)
 </script>
 
 <template>
   <Layout style="height: 100vh;">
-    <LayoutHeader
-      :style="{height: `50px`, width: '100%', borderBottom: '1px solid var(--color-border-2)'}"></LayoutHeader>
+    <LayoutHeader :style="{ height: `50px`, width: '100%', borderBottom: '1px solid var(--color-border-2)' }">
+    </LayoutHeader>
     <Layout>
-      <LayoutSider :style="{minWidth: '250px', height: '100%', borderRight: '1px solid var(--color-border-2)',
+      <LayoutSider :style="{
+        minWidth: '200px', height: '100%', borderRight: '1px solid var(--color-border-2)',
         backgroundColor: 'var(--color-fill-2)',
         padding: '8px'
       }">
-        <div id="side-panel"></div>
+        <!--<div id="panel__switcher"></div>-->
       </LayoutSider>
-      <LayoutContent v-cloak>
-        <div id="editorPreview" v-cloak>
-          <TextArea/>
-        </div>
+      <LayoutContent>
+        <div :ref="handleConnect"></div>
       </LayoutContent>
+      <LayoutSider :style="{
+        minWidth: '250px', height: '100%', borderLeft: '1px solid var(--color-border-2)',
+        backgroundColor: 'var(--color-fill-2)',
+        padding: '8px'
+      }">
+        <PanelUI/>
+      </LayoutSider>
     </Layout>
   </Layout>
-
-
 </template>
 
 <style>
