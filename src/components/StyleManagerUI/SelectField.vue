@@ -18,11 +18,20 @@ const displayOptions = computed(() => props.sectorProperty.getOptions().map((el)
     text: upperFirst(props.sectorProperty.getOptionLabel(el))
   }
 }))
+
+type EvType = {
+  value: string | number | boolean | Record<string, any> | (string | number | boolean | Record<string, any>)[]
+}
+const handleChange = (ev: EvType['value']): any => {
+  console.log(ev);
+}
+
 </script>
 <template>
   <Row class="w-100 my-2">
     <Col>
-    <Select :size="'small'" class="w-100" v-model="selectModel" :allowClear="props.sectorProperty.canClear()">
+    <Select @change="handleChange" :size="'small'" class="w-100" v-model="selectModel"
+      :allowClear="props.sectorProperty.canClear()">
       <Option v-for="option in displayOptions" :key="option.id" :value="option.value">
         <span>
           {{ option.text }}

@@ -1,19 +1,12 @@
-import { defineStore } from "pinia";
-export const useEditorStore = defineStore("editorStore", {
-  // const editor = ref({});
-  // const getEditor = computed(() => editor.value);
-  // function setEditor(_editor: Editor) {
-  //   editor.value = _editor;
-  // }
-  // return { editor, getEditor, setEditor };
+import { useEditor } from './../composables/editor.ts';
+import { defineStore } from 'pinia';
 
-  state: () => ({ editor: {} }),
-  getters: {
-    getEditor: (state) => state.editor,
-  },
-  actions: {
-    setEditor(_editor: any) {
-      this.editor = _editor;
-    },
-  },
+const { newEditor, connect } = useEditor();
+
+export const useAppStore = defineStore('editorStore', {
+	state: () => ({ editor: newEditor, connect }),
+	getters: {
+		getEditor: (state) => state.editor,
+	},
+	actions: {},
 });
