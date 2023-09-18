@@ -1,23 +1,34 @@
 <script setup lang="ts">
 	import { Col, Row, Space, Button, Divider } from '@arco-design/web-vue';
 	import { IconCloseCircleFill } from '@arco-design/web-vue/es/icon/index.js';
-	import { Property, PropertyRadio, PropertySelect } from 'grapesjs';
-	import { computed, ref } from 'vue';
+	import {
+		Property,
+		PropertyNumber,
+		PropertyRadio,
+		PropertySelect,
+	} from 'grapesjs';
+	import { computed } from 'vue';
 	//@ts-ignore
+	import { includes } from 'lodash';
 	import SelectField from './SelectField.vue';
 	import RadioField from './RadioField.vue';
+	import InputNumberField from './InputNumberField.vue';
 
-	type SectorPropertyType = PropertySelect & PropertyRadio & Property;
+	type SectorPropertyType = PropertySelect &
+		PropertyRadio &
+		PropertyNumber &
+		Property;
 	const props = defineProps<{
 		sectorProperty: SectorPropertyType;
 	}>();
 
 	const propType = computed(() => props.sectorProperty.getType());
-
-	const onClear = ref();
-
+	const defaultValue = computed(() => props.sectorProperty.getDefaultValue());
+	// const inputValue = computed(() =>
+	// 	props.sectorProperty.hasValue() ? props.sectorProperty.hasValue() : '',
+	// );
 	const handleClear = () => {
-		onClear.value.clear();
+		props.sectorProperty.clear();
 	};
 </script>
 <template>
@@ -28,11 +39,17 @@
 		<Row
 			:justify="'space-between'"
 			:align="'center'">
-			<Col class="mt-3 mb-1">
+			<Col
+				v-if="propType != 'select'"
+				class="mt-3 mb-1">
 				<div class="d-flex justify-content-between align-items-center">
 					<span>{{ props.sectorProperty.getLabel() }}</span>
-					<Space :direction="'horizontal'">
-						<Divider :direction="'vertical'" />
+					<Space
+						:direction="'horizontal'"
+						v-if="!['select', 'number'].includes(propType)">
+						<Divider
+							v-if="sectorProperty.canClear()"
+							:direction="'vertical'" />
 						<span v-if="sectorProperty.canClear()">Clear</span>
 						<Button
 							v-if="sectorProperty.canClear()"
@@ -40,12 +57,7 @@
 							:shape="'circle'"
 							:type="'outline'"
 							:status="'danger'"
-							@click="
-								(_) => {
-									sectorProperty.clear();
-									handleClear();
-								}
-							">
+							@click="handleClear">
 							<IconCloseCircleFill
 								:style="{
 									fontSize: '20px',
@@ -54,19 +66,18 @@
 					</Space>
 				</div>
 			</Col>
-			<Col>
+			<Col v-if="propType == 'select'">
 				<SelectField
-					v-if="propType == 'select'"
-					ref="onClear"
 					:sectorProperty="sectorProperty"
-					:defaultValue="sectorProperty.getValue()" />
+					:defaultValue="defaultValue" />
 			</Col>
-			<Col>
+			<Col v-if="propType == 'radio'">
 				<RadioField
-					ref="onClear"
-					v-if="propType == 'radio'"
 					:sectorProperty="sectorProperty"
-					:defaultValue="sectorProperty.getValue()" />
+					:defaultValue="defaultValue" />
+			</Col>
+			<Col v-if="propType == 'number'">
+				<InputNumberField :sectorProperty="sectorProperty" />
 			</Col>
 		</Row>
 	</Space>

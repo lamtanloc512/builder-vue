@@ -4,13 +4,11 @@
 	import { computed, ref } from 'vue';
 	//@ts-ignore
 	import { upperFirst } from 'lodash';
+
 	const props = defineProps<{
 		sectorProperty: PropertySelect & PropertyRadio;
 	}>();
 
-	console.log(props.sectorProperty.getOption());
-	console.log(props.sectorProperty.getOptions());
-	console.log(props.sectorProperty.getLabel());
 	const radioOptions = computed(() => {
 		return props.sectorProperty.getOptions().map((el) => {
 			return {
@@ -33,12 +31,6 @@
 	const handleRadioChange = (ev: EvType['value']): void => {
 		props.sectorProperty.upValue(`${ev}`);
 	};
-	const clear = () => {
-		radioValue.value = props.sectorProperty.getValue();
-	};
-	defineExpose({
-		clear,
-	});
 </script>
 
 <template>

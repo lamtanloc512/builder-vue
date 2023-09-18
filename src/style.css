@@ -5,3 +5,15 @@
 #styleManager .arco-collapse-item-content.arco-collapse-item-content-expend {
 	background-color: var(--color-bg-white) !important;
 }
+#styleManager .arco-select-view-clear-btn.arco-icon-hover::before,
+.arco-icon-hover.arco-input-icon-hover.arco-input-clear-btn::before {
+	background-color: rgb(var(--red-4)) !important;
+}
+#styleManager .arco-select-view-clear-btn.arco-icon-hover:hover::before,
+.arco-icon-hover.arco-input-icon-hover.arco-input-clear-btn:hover::before {
+	background-color: rgb(var(--red-7)) !important;
+}
+
+#styleManager .arco-icon.arco-icon-close {
+	color: #fff;
+}

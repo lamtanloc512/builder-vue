@@ -35,20 +35,17 @@
 	const clear = () => {
 		selectValue.value = props.sectorProperty.getValue();
 	};
-
-	defineExpose({
-		clear,
-	});
 </script>
 <template>
 	<Row class="w-100 my-2">
 		<Col>
 			<Select
-				@change="handleChange"
-				@clear="() => (selectValue = sectorProperty.getValue())"
 				:size="'small'"
 				class="w-100"
-				v-model="selectValue">
+				v-model="selectValue"
+				:allowClear="sectorProperty.canClear()"
+				@clear="clear"
+				@change="handleChange">
 				<Option
 					v-for="option in displayOptions"
 					:key="option.id"
