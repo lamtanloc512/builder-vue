@@ -4,7 +4,8 @@ import { IconDown } from "@arco-design/web-vue/es/icon";
 import { State } from "grapesjs";
 
 const props = defineProps<Partial<{
-  states: State[]
+  states: State[],
+  state: any
 }>>();
 
 const emit = defineEmits<{
@@ -19,7 +20,7 @@ const handleSelect = (value: ValueType, _: Event): void => {
 </script>
 <template>
   <DropdownButton size="small" @select="handleSelect">
-    States
+    {{ state ? state : "State" }}
     <template #icon>
       <IconDown />
     </template>
