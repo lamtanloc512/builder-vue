@@ -1,47 +1,44 @@
 <script setup lang="ts">
-import { Editor } from 'grapesjs';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { Collapse, CollapseItem } from '@arco-design/web-vue';
+import { Editor, Sector } from 'grapesjs';
+import { Ref, onMounted, onUnmounted, ref } from 'vue';
+//@ts-ignore
+import { upperFirst } from 'lodash';
+import { PropertyField } from './index.ts'
 
-
-const props = defineProps<{
-  editor: Editor
-}>()
-
-const sectors = ref([])
+const props = defineProps<{ editor: Editor }>()
+const styleManager = props.editor.StyleManager
+const sectors: Ref<Sector[] | any> = ref()
 const divEl = ref()
 
 onMounted(() => {
-  console.log(props.editor);
-  props.editor.on('style:custom', (props: any) => {
-    console.log(props)
-  });
-  //  editor.value.on('style:sector:remove ', handleStyleCustom);
-  //  editor.value.on('style:sector:update', handleStyleCustom);
-  //  editor.value.on('style:property:add', handleStyleCustom);
-  //  editor.value.on('style:property:remove', handleStyleCustom);
-  //  editor.value.on('style:property:update', handleStyleCustom);
-  //  editor.value.on('style:target', handleStyleCustom);
-  //  editor.value.on('style:custom', handleStyleCustom);
+  props.editor.on('style:custom', handleStyleManager)
 })
-
 onUnmounted(() => {
-  props.editor.off('style:custom', handleStyleCustom);
+  props.editor.off('style:custom', handleStyleManager);
 })
-
-const handleStyleCustom = (props: any) => {
-  console.log(props)
-  //  let {container} = props
-  //  if (!container) {
-  //    container = divEl.value
-  //  }
+//methods
+const handleStyleManager = (props: any) => {
+  let { container } = props
+  if (!container) {
+    container = divEl.value
+    sectors.value = styleManager.getSectors({ visible: true })
+  }
 }
 
 </script>
 <template>
-  <div :ref="(el) => divEl = el">
-    <h4>Hello WOrld</h4>
+  <div id="styleManager" :style="{
+    padding: '8px',
+    backgroundColor: 'var(--color-bg-white)'
+  }" :ref="(el) => divEl = el">
+    <Collapse :bordered="false">
+      <CollapseItem v-for="sector in sectors" :key="sector.getId()" :header="upperFirst(sector.getName())">
+        <div v-for="sectorProperty in sector.getProperties()" :key="sectorProperty.getId()">
+          <PropertyField :sectorProperty="sectorProperty" />
+        </div>
+      </CollapseItem>
+    </Collapse>
   </div>
 </template>
-
-
 <style scoped></style>

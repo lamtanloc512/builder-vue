@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Space } from '@arco-design/web-vue';
 import { SelectorUI, StyleManagerUI } from './index.ts';
 import { Editor } from 'grapesjs';
 defineProps<{
@@ -6,11 +7,9 @@ defineProps<{
 }>()
 </script>
 <template>
-  <div :style="{
-    padding: '8px',
-    backgroundColor: 'var(--color-bg-white)'
-  }">
+  <Space direction="vertical" fill>
     <StyleManagerUI :editor="editor" />
     <SelectorUI :editor="editor" />
-  </div>
+  </Space>
 </template>
+<style scoped></style>

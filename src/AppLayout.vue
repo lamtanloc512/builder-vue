@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Layout } from "@arco-design/web-vue";
-defineProps<{ editor: any }>()
+import { Editor } from "grapesjs";
+defineProps<{ editor: Editor }>()
 </script>
 <template>
   <Layout style="height: 100vh;">

@@ -35,7 +35,10 @@ const handleUI = (event: CustomSelectorEvent) => {
 }
 </script>
 <template>
-  <div>
+  <div :style="{
+    padding: '8px',
+    backgroundColor: 'var(--color-bg-white)'
+  }">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h5 style="margin: 0">Classes</h5>
       <StateButton @changeStateEvent="changeStateEvent" :states="states" :state="state" />
