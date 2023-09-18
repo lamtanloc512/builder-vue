@@ -1,7 +1,7 @@
 .arco-collapse-item-content {
-  padding-left: 8px;
+	padding-left: 8px;
 }
 
 #styleManager .arco-collapse-item-content.arco-collapse-item-content-expend {
-  background-color: var(--color-bg-white) !important;
+	background-color: var(--color-bg-white) !important;
 }

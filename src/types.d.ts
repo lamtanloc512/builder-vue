@@ -1,9 +1,9 @@
 export type SelectedProps = {
-  attributes: Selector["defaults"];
+	attributes: Selector['defaults'];
 };
 
 export type CustomSelectorEvent = {
-  container: HTMLElement;
-  selected: Array<SelectedProps>;
-  states: Array<State>;
+	container: HTMLElement;
+	selected: Array<SelectedProps>;
+	states: Array<State>;
 };

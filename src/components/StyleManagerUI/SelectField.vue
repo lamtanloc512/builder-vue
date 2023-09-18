@@ -1,45 +1,65 @@
 <script setup lang="ts">
-import { Row, Select, Option, Col } from "@arco-design/web-vue";
-import { PropertySelect } from "grapesjs";
-import { computed, ref } from "vue";
-//@ts-ignore
-import { upperFirst } from 'lodash'
+	import { Row, Select, Option, Col } from '@arco-design/web-vue';
+	import { PropertySelect } from 'grapesjs';
+	import { computed, ref } from 'vue';
+	//@ts-ignore
+	import { upperFirst } from 'lodash';
 
-const props = defineProps<{
-  sectorProperty: PropertySelect
-}>()
+	const props = defineProps<{
+		sectorProperty: PropertySelect;
+	}>();
 
-const selectModel = ref<string>(props.sectorProperty.getDefaultValue())
+	const selectValue = ref<string>(props.sectorProperty.getValue());
 
-const displayOptions = computed(() => props.sectorProperty.getOptions().map((el) => {
-  return {
-    id: props.sectorProperty.getOptionId(el),
-    value: props.sectorProperty.getOptionId(el),
-    text: upperFirst(props.sectorProperty.getOptionLabel(el))
-  }
-}))
+	const displayOptions = computed(() =>
+		props.sectorProperty.getOptions().map((el) => {
+			return {
+				id: props.sectorProperty.getOptionId(el),
+				value: props.sectorProperty.getOptionId(el),
+				text: upperFirst(props.sectorProperty.getOptionLabel(el)),
+			};
+		}),
+	);
 
-type EvType = {
-  value: string | number | boolean | Record<string, any> | (string | number | boolean | Record<string, any>)[]
-}
-const handleChange = (ev: EvType['value']): any => {
-  console.log(ev);
-}
+	type EvType = {
+		value:
+			| string
+			| number
+			| boolean
+			| Record<string, any>
+			| (string | number | boolean | Record<string, any>)[];
+	};
+	const handleChange = (ev: EvType['value']): any => {
+		props.sectorProperty.upValue(`${ev}`);
+	};
+	const clear = () => {
+		selectValue.value = props.sectorProperty.getValue();
+	};
 
+	defineExpose({
+		clear,
+	});
 </script>
 <template>
-  <Row class="w-100 my-2">
-    <Col>
-    <Select @change="handleChange" :size="'small'" class="w-100" v-model="selectModel"
-      :allowClear="props.sectorProperty.canClear()">
-      <Option v-for="option in displayOptions" :key="option.id" :value="option.value">
-        <span>
-          {{ option.text }}
-        </span>
-      </Option>
-    </Select>
-    </Col>
-  </Row>
+	<Row class="w-100 my-2">
+		<Col>
+			<Select
+				@change="handleChange"
+				@clear="() => (selectValue = sectorProperty.getValue())"
+				:size="'small'"
+				class="w-100"
+				v-model="selectValue">
+				<Option
+					v-for="option in displayOptions"
+					:key="option.id"
+					:value="option.value">
+					<span>
+						{{ option.text }}
+					</span>
+				</Option>
+			</Select>
+		</Col>
+	</Row>
 </template>
 
 <style scoped></style>

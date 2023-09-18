@@ -1,15 +1,12 @@
-
 <script setup lang="ts">
-import { Editor } from 'grapesjs';
-import { inject } from 'vue';
+	import { Editor } from 'grapesjs';
+	import { inject } from 'vue';
 
-// const editor: Editor | undefined = inject('editor')
-// console.log(props.editor);
+	// const editor: Editor | undefined = inject('editor')
+	// console.log(props.editor);
 </script>
 <template>
-  <div>
-
-  </div>
+	<div></div>
 </template>
 
 <style scoped></style>
