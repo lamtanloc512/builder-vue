@@ -35,7 +35,9 @@
 			backgroundColor: 'var(--color-bg-white)',
 		}"
 		:ref="(el) => (divEl = el)">
-		<Collapse :bordered="false">
+		<Collapse
+			:bordered="false"
+			accordion>
 			<CollapseItem
 				v-for="sector in sectors"
 				:key="sector.getId()"
@@ -43,7 +45,9 @@
 				<div
 					v-for="sectorProperty in sector.getProperties()"
 					:key="sectorProperty.getId()">
-					<PropertyField :sectorProperty="sectorProperty" />
+					<PropertyField
+						:isComposite="false"
+						:sectorProperty="sectorProperty" />
 				</div>
 			</CollapseItem>
 		</Collapse>

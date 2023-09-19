@@ -17,3 +17,10 @@
 #styleManager .arco-icon.arco-icon-close {
 	color: #fff;
 }
+
+#styleManager .t-input__wrap {
+	width: 100% !important;
+}
+#styleManager .t-input.t-input--prefix {
+	width: 100% !important;
+}

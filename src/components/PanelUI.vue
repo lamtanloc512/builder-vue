@@ -4,7 +4,7 @@
 </script>
 <template>
 	<Space
-		direction="vertical"
+		:direction="'vertical'"
 		fill>
 		<StyleManagerUI />
 		<SelectorUI />
