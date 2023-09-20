@@ -1,8 +1,8 @@
 <script setup lang="ts">
-	import { Collapse, CollapseItem } from '@arco-design/web-vue';
-	import { Editor, Sector } from 'grapesjs';
+	import { Collapse, CollapseItem, List } from '@arco-design/web-vue';
 	import { Ref, onMounted, onUnmounted, ref } from 'vue';
 	//@ts-ignore
+	import { Editor, Sector } from 'grapesjs';
 	import { upperFirst } from 'lodash';
 	import { PropertyField } from './index.ts';
 	import { inject } from 'vue';
@@ -31,7 +31,7 @@
 	<div
 		id="styleManager"
 		:style="{
-			padding: '8px',
+			padding: '4px',
 			backgroundColor: 'var(--color-bg-white)',
 		}"
 		:ref="(el) => (divEl = el)">
@@ -40,17 +40,24 @@
 			accordion>
 			<CollapseItem
 				v-for="sector in sectors"
+				:style="{ padding: '2px' }"
 				:key="sector.getId()"
 				:header="upperFirst(sector.getName())">
-				<div
-					v-for="sectorProperty in sector.getProperties()"
-					:key="sectorProperty.getId()">
-					<PropertyField
-						:isComposite="false"
-						:sectorProperty="sectorProperty" />
-				</div>
+				<List
+					:scrollbar="true"
+					:bordered="false"
+					:max-height="'50vh'">
+					<div
+						:style="{ padding: '0 14px 0 0' }"
+						v-for="sectorProperty in sector.getProperties()"
+						:key="sectorProperty.getId()">
+						<PropertyField
+							:isComposite="false"
+							:sectorProperty="sectorProperty" />
+					</div>
+				</List>
 			</CollapseItem>
 		</Collapse>
 	</div>
 </template>
-<style scoped></style>
+<style></style>

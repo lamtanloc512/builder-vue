@@ -8,7 +8,7 @@ export const useEditor = (overrideProps = {}) => {
 		fromElement: true,
 		width: 'auto',
 		storageManager: false,
-		height: '100vh',
+		height: '1000px',
 		selectorManager: {
 			componentFirst: true,
 			custom: true,

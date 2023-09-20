@@ -7,6 +7,7 @@
 		Divider,
 		Typography,
 		TypographyText,
+		TypographyTitle,
 	} from '@arco-design/web-vue';
 	import { IconCloseCircleFill } from '@arco-design/web-vue/es/icon/index.js';
 	import {
@@ -17,7 +18,7 @@
 		PropertySelect,
 		//@ts-ignore
 	} from 'grapesjs';
-	import { computed, ref } from 'vue';
+	import { computed, provide, ref, toRefs } from 'vue';
 	import { includes } from 'lodash';
 	import SelectField from './SelectField.vue';
 	import RadioField from './RadioField.vue';
@@ -37,15 +38,18 @@
 		isComposite: boolean;
 	}>();
 
+	const { sectorProperty, isComposite } = toRefs(props);
+
 	const radioRef = ref();
 	const colorRef = ref();
 	const sliderRef = ref();
+	const inputNumberRef = ref();
 	const compositeRef = ref();
-	const propType = computed(() => props.sectorProperty.getType());
-	const defaultValue = computed(() => props.sectorProperty.getDefaultValue());
+	const propType = computed(() => sectorProperty.value.getType());
+	const defaultValue = computed(() => sectorProperty.value.getDefaultValue());
 
 	const handleClear = () => {
-		props.sectorProperty.clear();
+		sectorProperty.value.clear();
 		switch (propType.value) {
 			case 'radio':
 				radioRef.value.handleClear();
@@ -56,10 +60,30 @@
 			case 'slider':
 				sliderRef.value.handleClear();
 				break;
+			case 'composite':
+				// console.log('radio', radioRef);
+				// console.log('color', colorRef);
+				// console.log('slider', sliderRef);
+				// console.log('inputNumber', inputNumberRef);
+				// console.log('composite', compositeRef);
+				// compositeRef.value.handleClear();
+				break;
 			default:
 				break;
 		}
+
+		console.log('radio', radioRef);
+		console.log('color', colorRef);
+		console.log('slider', sliderRef);
+		console.log('inputNumber', inputNumberRef);
+		console.log('composite', compositeRef);
 	};
+
+	defineExpose({
+		handleClear,
+	});
+
+	provide('isComposite', isComposite);
 </script>
 <template>
 	<Space
@@ -71,22 +95,28 @@
 			:justify="'space-between'"
 			:align="'center'">
 			<Col class="my-1">
-				<div class="d-flex justify-content-between align-items-center">
+				<div class="d-flex justify-content-between align-items-center py-1">
 					<Typography :class="[isComposite ? 'ms-0 mb-1' : 'mb-0 ms-1']">
-						<TypographyText
-							class="m-0 p-0"
-							:style="{ fontSize: '13px' }"
+						<TypographyTitle
+							:style="{ fontSize: '13.5px' }"
 							:code="isComposite"
-							>{{ sectorProperty.getLabel() }}</TypographyText
+							:heading="6"
+							>{{ sectorProperty.getLabel() }}</TypographyTitle
 						>
 					</Typography>
 					<Space
 						:direction="'horizontal'"
-						v-if="!includes(['select', 'number', 'color'], propType)">
+						v-if="!includes(['select', 'number'], propType)">
 						<Divider
 							v-if="sectorProperty.canClear()"
 							:direction="'vertical'" />
-						<span v-if="sectorProperty.canClear()">Clear</span>
+						<Typography v-if="sectorProperty.canClear()">
+							<TypographyText
+								:style="{ fontSize: '13px' }"
+								:code="isComposite"
+								>Reset</TypographyText
+							>
+						</Typography>
 						<Button
 							v-if="sectorProperty.canClear()"
 							:size="'mini'"
@@ -96,7 +126,7 @@
 							@click="handleClear">
 							<IconCloseCircleFill
 								:style="{
-									fontSize: '20px',
+									fontSize: '18px',
 								}" />
 						</Button>
 					</Space>

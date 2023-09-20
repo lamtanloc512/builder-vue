@@ -1,6 +1,6 @@
 <script setup lang="ts">
-	import { Row, Select, Option, Col } from '@arco-design/web-vue';
-	import { computed, ref } from 'vue';
+	import { Select, Option } from '@arco-design/web-vue';
+	import { computed, toRef } from 'vue';
 	import { upperFirst } from 'lodash';
 	//@ts-ignore
 	import { PropertySelect } from 'grapesjs';
@@ -10,7 +10,8 @@
 		sectorProperty: PropertySelect;
 	}>();
 
-	const selectValue = ref<string>(props.sectorProperty.getValue());
+	// const selectValue = ref<string>(props.sectorProperty.getValue());
+	const selectValue = toRef(props.sectorProperty.getValue());
 
 	const displayOptions = computed(() =>
 		props.sectorProperty.getOptions().map((el: Property) => {
@@ -38,26 +39,21 @@
 	};
 </script>
 <template>
-	<Row class="w-100">
-		<Col>
-			<Select
-				:size="'mini'"
-				class="w-100"
-				v-model="selectValue"
-				:allowClear="sectorProperty.canClear()"
-				@clear="clear"
-				@change="handleChange">
-				<Option
-					v-for="option in displayOptions"
-					:key="option.id"
-					:value="option.value">
-					<span>
-						{{ option.text }}
-					</span>
-				</Option>
-			</Select>
-		</Col>
-	</Row>
+	<Select
+		class="w-100"
+		v-model="selectValue"
+		:allowClear="sectorProperty.canClear()"
+		@clear="clear"
+		@change="handleChange">
+		<Option
+			v-for="option in displayOptions"
+			:key="option.id"
+			:value="option.value">
+			<span>
+				{{ option.text }}
+			</span>
+		</Option>
+	</Select>
 </template>
 
 <style scoped></style>

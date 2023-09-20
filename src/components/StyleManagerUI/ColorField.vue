@@ -4,7 +4,7 @@
 	import {
 		ColorObject,
 		ColorPickerChangeTrigger,
-		ColorPicker,
+		ColorPickerPanel,
 		// ColorPickerPanel,
 	} from 'tdesign-vue-next';
 	import { onMounted, ref } from 'vue';
@@ -58,13 +58,14 @@
 </script>
 
 <template>
-	<ColorPicker
+	<ColorPickerPanel
 		class="w-100"
 		v-model="colorValue"
 		:clearable="sectorProperty.canClear()"
 		:recentColors="recentColors"
 		:enableAlpha="true"
 		:multiple="true"
+		:swatch-colors="[]"
 		@change="handleColorChange"
 		@recentColorsChange="handleRecentColorChange" />
 </template>

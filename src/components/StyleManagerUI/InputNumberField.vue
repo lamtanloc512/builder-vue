@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { InputNumber } from '@arco-design/web-vue';
-	import { ref } from 'vue';
+	import { inject, ref } from 'vue';
 	import { toNumber, toString } from 'lodash';
 	//@ts-ignore
 	import { PropertyNumber } from 'grapesjs';
@@ -21,22 +21,25 @@
 	};
 
 	const handleNumberChange = (value: EvType['value']): void => {
-		console.log(typeof value);
 		props.sectorProperty.upValue(toString(value));
 	};
 	const clear = () => {
 		inputNumberValue.value = toNumber(props.sectorProperty.getValue());
 	};
+
+	const isComposite: boolean | undefined = inject('isComposite');
+
+	defineExpose({
+		clear,
+	});
 </script>
 
 <template>
 	<InputNumber
 		v-model="inputNumberValue"
-		:size="'mini'"
-		:mode="'button'"
+		:allowClear="isComposite ? true : sectorProperty.canClear()"
 		:defaultValue="toNumber(sectorProperty.getDefaultValue())"
 		:placeholder="sectorProperty.getDefaultValue()"
-		:allowClear="sectorProperty.canClear()"
 		@change="handleNumberChange"
 		@clear="clear" />
 </template>

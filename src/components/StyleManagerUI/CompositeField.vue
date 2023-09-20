@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { Card } from '@arco-design/web-vue';
-	import { ref } from 'vue';
+	import { ref, toRef } from 'vue';
 	import { PropertyField } from '../index.ts';
 	//@ts-ignore
 	import { PropertyComposite, Property } from 'grapesjs';
@@ -9,75 +9,38 @@
 		sector: PropertyComposite;
 	}>();
 
-	const sectorProperties = ref<Property[]>(props.sector.getProperties());
+	// const sectorProperties = ref<Property[]>(props.sector.getProperties());
+	const sector = toRef(props.sector);
+	const sectorProperties = sector.value.getProperties();
+	const propertyRef = ref();
 
-	// const sectorProperties = ref<Property>(props.sector.getProperties());
-
-	// console.log(
-	// 	props.sectorProperty.getProperties().forEach((el) => {
-	// 		console.log(el);
-	// 	}),
-	// );
-
-	//  const propValue =
-
-	// type EvType = {
-	// 	value:
-	// 		| string
-	// 		| number
-	// 		| boolean
-	// 		| Record<string, any>
-	// 		| (string | number | boolean | Record<string, any>)[];
-	// };
-	// const handleSliderChange = (ev: EvType['value']): void => {
-	// 	props.sectorProperty.upValue(`${ev}`);
-	// };
-	// const handleClear = () => {
-	// 	sliderValue.value = toNumber(props.sectorProperty.getValue());
-	// };
-
-	// defineExpose<{
-	// 	handleClear: () => void;
-	// }>({
-	// 	handleClear,
-	// });
-
-	// watchEffect(() => {
-	// 	sectorProperties.value.forEach((el) => {
-	// 		console.log(el);
-	// 	});
-	// });
-
-	defineExpose({});
+	const handleClear = (): void => {
+		console.log('caled');
+		propertyRef.value.forEach((property: any) => {
+			console.log(property);
+			property.handleClear();
+		});
+	};
+	defineExpose({
+		handleClear,
+	});
 </script>
 
 <template>
-	<Card :size="'small'">
-		<!-- <Grid :colGap="8" :rowGap="8">
-      <GridItem v-for="sectorProperty in sectorProperties">
-        <PropertyField :isComposite="true" :sectorProperty="sectorProperty" />
-      </GridItem>
-    </Grid> -->
-		<!-- <Space
-      class="w-100"
-      :direction="'horizontal'"
-      :wrap="false"
-      :size="'small'">
-      <PropertyField
-        v-for="sectorProperty in sectorProperties"
-        :isComposite="true"
-        :sectorProperty="sectorProperty" />
-    </Space> -->
+	<Card
+		class="composite-group"
+		:size="'small'">
 		<div class="grid-container">
 			<PropertyField
+				v-for="sectorProperty in sectorProperties"
 				:class="[
 					sectorProperties.length % 2 == 1
 						? 'grid-item-odd'
 						: 'grid-item-event',
 				]"
-				v-for="sectorProperty in sectorProperties"
 				:isComposite="true"
-				:sectorProperty="sectorProperty" />
+				:sectorProperty="sectorProperty"
+				ref="propertyRef" />
 		</div>
 	</Card>
 </template>
@@ -87,10 +50,10 @@
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
 		grid-auto-columns: 1fr;
-		gap: 8px;
+		row-gap: 0px;
+		column-gap: 8px;
 		margin: 0 auto;
 	}
-
 	.grid-item-event {
 		grid-column: span 1;
 	}

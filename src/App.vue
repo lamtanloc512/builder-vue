@@ -23,9 +23,11 @@
 					height: `50px`,
 					width: '100%',
 					borderBottom: '1px solid var(--color-border-2)',
+					position: 'fixed',
+					zIndex: 100,
 				}">
 			</LayoutHeader>
-			<Layout>
+			<Layout :style="{ marginTop: '50px' }">
 				<LayoutSider
 					:style="{
 						minWidth: '200px',
