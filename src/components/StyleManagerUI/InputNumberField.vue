@@ -1,9 +1,9 @@
 <script setup lang="ts">
 	import { InputNumber } from '@arco-design/web-vue';
-	import { PropertyNumber } from 'grapesjs';
 	import { ref } from 'vue';
-	//@ts-ignore
 	import { toNumber, toString } from 'lodash';
+	//@ts-ignore
+	import { PropertyNumber } from 'grapesjs';
 
 	const props = defineProps<{
 		sectorProperty: PropertyNumber;
@@ -32,7 +32,7 @@
 <template>
 	<InputNumber
 		v-model="inputNumberValue"
-		:size="'small'"
+		:size="'mini'"
 		:mode="'button'"
 		:defaultValue="toNumber(sectorProperty.getDefaultValue())"
 		:placeholder="sectorProperty.getDefaultValue()"

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 	import { Radio, RadioGroup } from '@arco-design/web-vue';
-	import { PropertyRadio, PropertySelect } from 'grapesjs';
+	//@ts-ignore
+	import { PropertyRadio, PropertySelect, SelectOption } from 'grapesjs';
 	import { upperFirst } from 'lodash';
 	import { computed, defineExpose, ref } from 'vue';
 
@@ -9,7 +10,7 @@
 	}>();
 
 	const radioOptions = computed(() => {
-		return props.sectorProperty.getOptions().map((el) => {
+		return props.sectorProperty.getOptions().map((el: SelectOption) => {
 			return {
 				id: el.id,
 				text: upperFirst(el.id),

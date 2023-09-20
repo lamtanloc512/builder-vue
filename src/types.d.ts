@@ -7,3 +7,5 @@ export type CustomSelectorEvent = {
 	selected: Array<SelectedProps>;
 	states: Array<State>;
 };
+
+// export declare module 'grapesjs' {}

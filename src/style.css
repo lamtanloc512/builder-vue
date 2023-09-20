@@ -1,3 +1,9 @@
+.t-input__inner,
+.t-input__inner-pre {
+	font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+		Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
+}
+
 .arco-collapse-item-content {
 	padding-left: 8px;
 }
@@ -23,4 +29,13 @@
 }
 #styleManager .t-input.t-input--prefix {
 	width: 100% !important;
+}
+#styleManager .arco-icon-hover::before {
+	width: 14px !important;
+	height: 14px !important;
+}
+
+.custom-i18n {
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+		Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }

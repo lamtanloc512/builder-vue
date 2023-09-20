@@ -1,12 +1,13 @@
 <script setup lang="ts">
 	import { Slider } from '@arco-design/web-vue';
+	//@ts-ignore
 	import { PropertyNumber } from 'grapesjs';
 	import { toNumber } from 'lodash';
 	import { ref } from 'vue';
 
 	const props = defineProps<{ sectorProperty: PropertyNumber }>();
 	const formatter = (value: number) => {
-		return `${Math.round((value / 50) * 100)}%`;
+		return `${Math.round(value * 100)}%`;
 	};
 	const sliderValue = ref(toNumber(props.sectorProperty.getValue()));
 
@@ -37,7 +38,7 @@
 		v-model="sliderValue"
 		:min="toNumber(sectorProperty.getMin())"
 		:max="toNumber(sectorProperty.getMax())"
-    :step="toNumber(sectorProperty.getStep())"
+		:step="toNumber(sectorProperty.getStep())"
 		:formatTooltip="formatter"
 		@change="handleSliderChange" />
 </template>
