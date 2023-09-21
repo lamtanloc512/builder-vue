@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { Select, Option } from '@arco-design/web-vue';
-	import { computed, toRef } from 'vue';
+	import { computed, toRef, ref } from 'vue';
 	import { upperFirst } from 'lodash';
 	//@ts-ignore
 	import { PropertySelect } from 'grapesjs';
@@ -8,10 +8,12 @@
 
 	const props = defineProps<{
 		sectorProperty: PropertySelect;
+		isComposite?: boolean;
 	}>();
 
-	// const selectValue = ref<string>(props.sectorProperty.getValue());
 	const selectValue = toRef(props.sectorProperty.getValue());
+
+	const canClearCompositeChilds = ref(false);
 
 	const displayOptions = computed(() =>
 		props.sectorProperty.getOptions().map((el: Property) => {
@@ -33,16 +35,27 @@
 	};
 	const handleChange = (ev: EvType['value']): any => {
 		props.sectorProperty.upValue(`${ev}`);
+		if (props.isComposite) {
+			canClearCompositeChilds.value = true;
+		}
 	};
 	const clear = () => {
 		selectValue.value = props.sectorProperty.getValue();
+		props.sectorProperty.setValue(props.sectorProperty.getDefaultValue());
+		canClearCompositeChilds.value = false;
 	};
+
+	defineExpose({ clear });
 </script>
 <template>
 	<Select
 		class="w-100"
 		v-model="selectValue"
-		:allowClear="sectorProperty.canClear()"
+		:allowClear="
+			canClearCompositeChilds
+				? canClearCompositeChilds
+				: sectorProperty.canClear()
+		"
 		@clear="clear"
 		@change="handleChange">
 		<Option

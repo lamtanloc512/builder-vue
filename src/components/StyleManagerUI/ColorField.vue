@@ -14,6 +14,10 @@
 		sectorProperty: Property;
 	}>();
 
+	const emit = defineEmits({
+		reset: [],
+	});
+
 	const colorValue = ref(
 		props.sectorProperty.hasValue()
 			? props.sectorProperty.getValue()
@@ -48,6 +52,7 @@
 
 	const handleClear = () => {
 		colorValue.value = props.sectorProperty.getValue();
+		emit('reset');
 	};
 
 	defineExpose<{

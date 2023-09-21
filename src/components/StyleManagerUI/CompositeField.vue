@@ -1,46 +1,92 @@
 <script setup lang="ts">
-	import { Card } from '@arco-design/web-vue';
-	import { ref, toRef } from 'vue';
-	import { PropertyField } from '../index.ts';
+	import {
+		Card,
+		Space,
+		Button,
+		Divider,
+		Typography,
+		TypographyText,
+		TypographyTitle,
+	} from '@arco-design/web-vue';
+	import { ref } from 'vue';
 	//@ts-ignore
 	import { PropertyComposite, Property } from 'grapesjs';
+	import InputNumberField from './InputNumberField.vue';
+	import SelectField from './SelectField.vue';
+	import ColorField from './ColorField.vue';
 
 	const props = defineProps<{
 		sector: PropertyComposite;
 	}>();
 
-	// const sectorProperties = ref<Property[]>(props.sector.getProperties());
-	const sector = toRef(props.sector);
-	const sectorProperties = sector.value.getProperties();
-	const propertyRef = ref();
+	const componentRef = ref();
 
-	const handleClear = (): void => {
-		console.log('caled');
-		propertyRef.value.forEach((property: any) => {
-			console.log(property);
-			property.handleClear();
+	const reset = (): void => {
+		componentRef.value.forEach((el: any) => {
+			const checkCanClear = el?.clear;
+			if (checkCanClear) {
+				el.clear();
+			}
 		});
 	};
-	defineExpose({
-		handleClear,
-	});
+
+	const resolveMapComponent = {
+		number: InputNumberField,
+		select: SelectField,
+		color: ColorField,
+	} as any;
+
+	if (props.sector.getType() == 'composite') {
+		// props.sector.getProperties().forEach((el) => {
+		// 	console.log(el.canClear());
+		// });
+
+		console.log(props.sector.getValue());
+	}
 </script>
 
 <template>
 	<Card
 		class="composite-group"
 		:size="'small'">
+		<div class="d-flex justify-content-between align-items-center py-1">
+			<Typography :class="['mb-0 ms-1']">
+				<TypographyTitle
+					:style="{ fontSize: '13.5px' }"
+					:heading="6"
+					>{{ sector.getLabel() }}</TypographyTitle
+				>
+			</Typography>
+			<Space :direction="'horizontal'">
+				<Divider :direction="'vertical'" />
+				<Typography>
+					<TypographyText :style="{ fontSize: '13px' }">Reset</TypographyText>
+				</Typography>
+				<Button
+					:size="'mini'"
+					:shape="'circle'"
+					:type="'primary'"
+					:status="'success'"
+					@click="reset">
+					<IconCloseCircleFill
+						:style="{
+							fontSize: '18px',
+						}" />
+				</Button>
+			</Space>
+		</div>
 		<div class="grid-container">
-			<PropertyField
-				v-for="sectorProperty in sectorProperties"
+			<component
+				ref="componentRef"
+				v-for="sectorProperty in sector.getProperties()"
+				:is="resolveMapComponent[sectorProperty.getType()]"
 				:class="[
-					sectorProperties.length % 2 == 1
+					sector.getProperties().length % 2 == 1
 						? 'grid-item-odd'
 						: 'grid-item-event',
 				]"
 				:isComposite="true"
-				:sectorProperty="sectorProperty"
-				ref="propertyRef" />
+				:sectorProperty="sectorProperty" />
 		</div>
 	</Card>
 </template>
@@ -50,7 +96,7 @@
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
 		grid-auto-columns: 1fr;
-		row-gap: 0px;
+		row-gap: 8px;
 		column-gap: 8px;
 		margin: 0 auto;
 	}

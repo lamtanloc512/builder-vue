@@ -18,7 +18,7 @@
 		PropertySelect,
 		//@ts-ignore
 	} from 'grapesjs';
-	import { computed, provide, ref, toRefs } from 'vue';
+	import { computed, ref } from 'vue';
 	import { includes } from 'lodash';
 	import SelectField from './SelectField.vue';
 	import RadioField from './RadioField.vue';
@@ -38,18 +38,14 @@
 		isComposite: boolean;
 	}>();
 
-	const { sectorProperty, isComposite } = toRefs(props);
-
 	const radioRef = ref();
 	const colorRef = ref();
 	const sliderRef = ref();
-	const inputNumberRef = ref();
-	const compositeRef = ref();
-	const propType = computed(() => sectorProperty.value.getType());
-	const defaultValue = computed(() => sectorProperty.value.getDefaultValue());
+	const propType = computed(() => props.sectorProperty.getType());
+	const defaultValue = computed(() => props.sectorProperty.getDefaultValue());
 
 	const handleClear = () => {
-		sectorProperty.value.clear();
+		props.sectorProperty.clear();
 		switch (propType.value) {
 			case 'radio':
 				radioRef.value.handleClear();
@@ -60,30 +56,10 @@
 			case 'slider':
 				sliderRef.value.handleClear();
 				break;
-			case 'composite':
-				// console.log('radio', radioRef);
-				// console.log('color', colorRef);
-				// console.log('slider', sliderRef);
-				// console.log('inputNumber', inputNumberRef);
-				// console.log('composite', compositeRef);
-				// compositeRef.value.handleClear();
-				break;
 			default:
 				break;
 		}
-
-		console.log('radio', radioRef);
-		console.log('color', colorRef);
-		console.log('slider', sliderRef);
-		console.log('inputNumber', inputNumberRef);
-		console.log('composite', compositeRef);
 	};
-
-	defineExpose({
-		handleClear,
-	});
-
-	provide('isComposite', isComposite);
 </script>
 <template>
 	<Space
@@ -106,7 +82,7 @@
 					</Typography>
 					<Space
 						:direction="'horizontal'"
-						v-if="!includes(['select', 'number'], propType)">
+						v-if="!includes(['select', 'number', 'composite'], propType)">
 						<Divider
 							v-if="sectorProperty.canClear()"
 							:direction="'vertical'" />
@@ -121,7 +97,7 @@
 							v-if="sectorProperty.canClear()"
 							:size="'mini'"
 							:shape="'circle'"
-							:type="'outline'"
+							:type="'primary'"
 							:status="'danger'"
 							@click="handleClear">
 							<IconCloseCircleFill
@@ -157,9 +133,7 @@
 					:sectorProperty="sectorProperty" />
 			</Col>
 			<Col v-if="propType == 'composite'">
-				<CompositeField
-					ref="compositeRef"
-					:sector="sectorProperty" />
+				<CompositeField :sector="sectorProperty" />
 			</Col>
 		</Row>
 	</Space>

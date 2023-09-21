@@ -1,47 +1,59 @@
 <script setup lang="ts">
 	import { InputNumber } from '@arco-design/web-vue';
-	import { inject, ref } from 'vue';
-	import { toNumber, toString } from 'lodash';
+	import { ref, toRef } from 'vue';
+	import { isNumber, isString, toNumber, toString } from 'lodash';
 	//@ts-ignore
 	import { PropertyNumber } from 'grapesjs';
 
 	const props = defineProps<{
 		sectorProperty: PropertyNumber;
+		isComposite?: boolean;
 	}>();
 
-	const inputNumberValue = ref(
-		props.sectorProperty.hasValue()
-			? toNumber(props.sectorProperty.getValue())
-			: 0,
-	);
+	const inputNumberValue = toRef(toNumber(props.sectorProperty.getValue()));
+
+	const canClearCompositeChilds = ref(false);
 
 	type EvType = {
-		value: number | undefined;
+		value: number | string | undefined;
 		ev: Event;
 	};
 
 	const handleNumberChange = (value: EvType['value']): void => {
 		props.sectorProperty.upValue(toString(value));
+		if (props.isComposite) {
+			canClearCompositeChilds.value = true;
+		}
 	};
 	const clear = () => {
-		inputNumberValue.value = toNumber(props.sectorProperty.getValue());
+		props.sectorProperty.setValue(props.sectorProperty.getDefaultValue());
+		inputNumberValue.value = isString(props.sectorProperty.getValue())
+			? props.sectorProperty.getValue()
+			: isNumber(props.sectorProperty.getValue())
+			? props.sectorProperty.getValue()
+			: 0;
+		if (props.isComposite) {
+			canClearCompositeChilds.value = false;
+		}
 	};
 
-	const isComposite: boolean | undefined = inject('isComposite');
-
-	defineExpose({
-		clear,
-	});
+	defineExpose({ clear });
 </script>
 
 <template>
-	<InputNumber
-		v-model="inputNumberValue"
-		:allowClear="isComposite ? true : sectorProperty.canClear()"
-		:defaultValue="toNumber(sectorProperty.getDefaultValue())"
-		:placeholder="sectorProperty.getDefaultValue()"
-		@change="handleNumberChange"
-		@clear="clear" />
+	<div>
+		<InputNumber
+			v-model="inputNumberValue"
+			:allowClear="
+				canClearCompositeChilds
+					? canClearCompositeChilds
+					: sectorProperty.canClear()
+			"
+			:defaultValue="toNumber(sectorProperty.getDefaultValue())"
+			:placeholder="sectorProperty.getDefaultValue()"
+			@change="handleNumberChange"
+			@clear="clear" />
+	</div>
 </template>
 
 <style scoped></style>
