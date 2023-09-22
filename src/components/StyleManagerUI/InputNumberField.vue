@@ -26,9 +26,10 @@
 		}
 	};
 	const clear = () => {
-		props.sectorProperty.setValue(props.sectorProperty.getDefaultValue());
+		// props.sectorProperty.setValue(props.sectorProperty.getDefaultValue());
+		props.sectorProperty.clear();
 		inputNumberValue.value = isString(props.sectorProperty.getValue())
-			? props.sectorProperty.getValue()
+			? toNumber(props.sectorProperty.getValue())
 			: isNumber(props.sectorProperty.getValue())
 			? props.sectorProperty.getValue()
 			: 0;

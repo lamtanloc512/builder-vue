@@ -8,7 +8,6 @@
 	import { PanelUI, BlocksUI } from './components/index.ts';
 	import { provide, ref } from 'vue';
 	import AppLayout from './AppLayout.vue';
-	// import { Editor } from "grapesjs";
 	import { useAppStore } from './store/editorStore.ts';
 	const div = ref();
 	const store = useAppStore();
@@ -30,11 +29,9 @@
 			<Layout :style="{ marginTop: '50px' }">
 				<LayoutSider
 					:style="{
-						minWidth: '200px',
+						minWidth: '280px',
 						height: '100%',
 						borderRight: '1px solid var(--color-border-2)',
-						backgroundColor: 'var(--color-fill-2)',
-						padding: '8px',
 					}">
 					<BlocksUI />
 				</LayoutSider>
@@ -49,7 +46,7 @@
 				</LayoutContent>
 				<LayoutSider
 					:style="{
-						minWidth: '290px',
+						minWidth: '280px',
 						height: '100%',
 						borderLeft: '1px solid var(--color-border-2)',
 						backgroundColor: 'var(--color-fill-2)',

@@ -2,9 +2,7 @@
 	import { Select, Option } from '@arco-design/web-vue';
 	import { computed, toRef, ref } from 'vue';
 	import { upperFirst } from 'lodash';
-	//@ts-ignore
-	import { PropertySelect } from 'grapesjs';
-	import { Property } from 'grapesjs/dist/index.js';
+	import { PropertySelect, SelectOption } from 'grapesjs';
 
 	const props = defineProps<{
 		sectorProperty: PropertySelect;
@@ -16,7 +14,7 @@
 	const canClearCompositeChilds = ref(false);
 
 	const displayOptions = computed(() =>
-		props.sectorProperty.getOptions().map((el: Property) => {
+		props.sectorProperty.getOptions().map((el: SelectOption) => {
 			return {
 				id: props.sectorProperty.getOptionId(el),
 				value: props.sectorProperty.getOptionId(el),
@@ -41,7 +39,7 @@
 	};
 	const clear = () => {
 		selectValue.value = props.sectorProperty.getValue();
-		props.sectorProperty.setValue(props.sectorProperty.getDefaultValue());
+		props.sectorProperty.clear();
 		canClearCompositeChilds.value = false;
 	};
 

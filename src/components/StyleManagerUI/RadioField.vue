@@ -34,6 +34,7 @@
 
 	const handleClear = () => {
 		radioValue.value = props.sectorProperty.getValue();
+		props.sectorProperty.clear();
 	};
 
 	defineExpose<{

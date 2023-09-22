@@ -16,6 +16,9 @@ export const useEditor = (overrideProps = {}) => {
 		styleManager: {
 			custom: true,
 		},
+		// layerManager: {
+		// 	custom: true,
+		// },
 		panels: { defaults: [] },
 		...overrideProps,
 	};

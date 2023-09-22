@@ -1,15 +1,14 @@
 <script setup lang="ts">
 	import { Slider } from '@arco-design/web-vue';
-	//@ts-ignore
 	import { PropertyNumber } from 'grapesjs';
 	import { toNumber } from 'lodash';
-	import { ref } from 'vue';
+	import { toRef } from 'vue';
 
 	const props = defineProps<{ sectorProperty: PropertyNumber }>();
 	const formatter = (value: number) => {
 		return `${Math.round(value * 100)}%`;
 	};
-	const sliderValue = ref(toNumber(props.sectorProperty.getValue()));
+	const sliderValue = toRef(toNumber(props.sectorProperty.getValue()));
 
 	type EvType = {
 		value:
@@ -23,6 +22,7 @@
 		props.sectorProperty.upValue(`${ev}`);
 	};
 	const handleClear = () => {
+		props.sectorProperty.clear();
 		sliderValue.value = toNumber(props.sectorProperty.getValue());
 	};
 

@@ -35,14 +35,6 @@
 		select: SelectField,
 		color: ColorField,
 	} as any;
-
-	if (props.sector.getType() == 'composite') {
-		// props.sector.getProperties().forEach((el) => {
-		// 	console.log(el.canClear());
-		// });
-
-		console.log(props.sector.getValue());
-	}
 </script>
 
 <template>
@@ -57,7 +49,9 @@
 					>{{ sector.getLabel() }}</TypographyTitle
 				>
 			</Typography>
-			<Space :direction="'horizontal'">
+			<Space
+				:direction="'horizontal'"
+				v-if="props.sector.canClear()">
 				<Divider :direction="'vertical'" />
 				<Typography>
 					<TypographyText :style="{ fontSize: '13px' }">Reset</TypographyText>
