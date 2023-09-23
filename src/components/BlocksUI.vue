@@ -5,7 +5,7 @@
 		IconLayers,
 		IconImage,
 	} from '@arco-design/web-vue/es/icon';
-	import LayerMangerUI from './BlocksUI/LayerMangerUI.vue';
+	import LayerMangerUI from './LayerManagerUI.vue';
 </script>
 <template>
 	<div>

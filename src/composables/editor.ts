@@ -1,7 +1,15 @@
 import grapesjs, { Editor } from 'grapesjs';
 export const useEditor = (overrideProps = {}) => {
 	const node: HTMLElement = document.createElement('div');
-	node.innerHTML = `<h1 class="asdasdsad" style="font-size: 50px">Welcome to VueGrapes Pagebuilder</h1>`;
+	node.innerHTML = `
+	<div>
+		<h1 class="asdasdsad" style="font-size: 50px">Welcome to VueGrapes Pagebuilder</h1>
+		<h2 class="test" style="font-size: 33px">2nd Child</h2>
+	</div>
+	<div>
+		<h1 class="asdasdsad" style="font-size: 50px">Welcome to VueGrapes Pagebuilder</h1>
+		<h2 class="test" style="font-size: 33px">2nd Child</h2>
+	</div>`;
 
 	const props = {
 		container: node,
