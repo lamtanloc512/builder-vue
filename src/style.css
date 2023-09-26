@@ -51,3 +51,36 @@ body {
 /* .composite-group .arco-card-body {
 	padding-top: 0;
 } */
+/* 
+span.arco-tree-node-title-text {
+	display: flex;
+	justify-content: space-between;
+	text-wrap: nowrap;
+}
+
+.arco-tabs-content {
+	padding: 0 !important;
+}
+
+.arco-tree-show-line .arco-tree-node-switcher {
+	width: 10px !important;
+	margin-right: 5px !important;
+}
+
+.arco-menu-vertical .arco-menu-inner {
+	padding: 0;
+}
+.arco-menu-vertical .arco-menu-group-title,
+.arco-menu-vertical .arco-menu-inline-header,
+.arco-menu-vertical .arco-menu-item,
+.arco-menu-vertical .arco-menu-pop-header {
+	padding: 0 10px;
+	line-height: 32px;
+}
+.arco-menu {
+	font-size: 13px;
+} */
+
+.arco-tabs-left.arco-tabs-vertical .arco-tabs-content {
+	padding-left: 0;
+}

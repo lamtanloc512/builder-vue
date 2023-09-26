@@ -1,101 +1,55 @@
 <script setup lang="ts">
-	import { Tree, TreeNodeData } from '@arco-design/web-vue';
-	import { Component, Editor, LayerData } from 'grapesjs';
-	import { inject, onMounted, ref } from 'vue';
+	import { MenuItem, SubMenu } from '@arco-design/web-vue';
+	import { IconApps } from '@arco-design/web-vue/es/icon';
+	import { ref } from 'vue';
 
 	const props = defineProps<{
-		component: Component;
-		level: Number;
-		editor: Editor | undefined;
+		component: Object;
 	}>();
 
-	const layers = props.editor?.Layers;
-
-	//states
-	const name = ref<string>();
-	const components = ref<TreeNodeData[]>();
-	const visible = ref<boolean>();
-	const open = ref<boolean>();
-	const selected = ref<boolean>();
-	const hovered = ref<boolean>();
-	// const editing = ref<boolean>();
-	const layerRef = ref();
-
-	const componentResolverMap: Map<string, Component> = new Map();
-
-	onMounted(() => {
-		updateLayer(layers?.getLayerData(props.component));
-		// props.editor?.on('layer:custom', (props) => {
-		// 	console.log(props);
-		// });
-
-		// Triggered when the root layer is changed.
-		// props.editor?.on('layer:root', (root) => {
-		// 	console.log(root);
-		// });
-
-		// Triggered when a component is updated, this allows you to update specific layers.
-		props.editor?.on('layer:component', onLayerComponentUpdate);
-	});
-
-	const updateLayer = (data: LayerData | undefined) => {
-		name.value = data?.name;
-		components.value = convertToTreeNode(data?.components);
-		visible.value = data?.visible;
-		open.value = data?.open;
-		selected.value = data?.open;
-		hovered.value = data?.hovered;
-	};
-
-	const onLayerComponentUpdate = (_component: Component | undefined) => {
-		if (_component === props.component) {
-			updateLayer(layers?.getLayerData(_component));
-		}
-	};
-
-	const onDrop = () => {};
-
-	const convertToTreeNode = (
-		components: Component[] | undefined,
-	): TreeNodeData[] => {
-		if (!components || components.length == 0) return [];
-		return components.map((el: Component): any => {
-			componentResolverMap.set(el.ccid, el);
-			return {
-				key: el.getId(),
-				title: el.getName(),
-				children: convertToTreeNode(layers?.getComponents(el)),
-			};
-		});
-	};
-
-	const setSelected = (
-		selectedKeys: (string | number)[],
-		data: {
-			selected?: boolean | undefined;
-			selectedNodes: TreeNodeData[];
-			node?: TreeNodeData | undefined;
-			e?: Event | undefined;
-		},
-	) => {
-		const component = componentResolverMap.get(`${selectedKeys}`);
-		if (component) {
-			layers?.setLayerData(component, { selected: true }, { event: data.e });
-		}
-	};
+	const test = ref(false);
 </script>
 
 <template>
-	<div>
-		<Tree
-			draggable
-			blockNode
-			show-line
-			:data="components"
-			@drop="onDrop"
-			@select="setSelected">
-		</Tree>
+	<div class="drop-zone">
+		<div
+			v-if="!test"
+			class="wrapper">
+			<div class="indent"></div>
+			<MenuItem
+				class="w-100 m-0"
+				key="1_0">
+				<template #icon><IconApps /></template>
+				<template #title>Navigation 2</template>
+				<div>Menu 1</div></MenuItem
+			>
+		</div>
+
+		<SubMenu
+			v-if="test"
+			key="1">
+			<template #icon><IconApps /></template>
+			<template #title>Navigation 2</template>
+			<MenuItem key="1_0">Menu 1</MenuItem>
+			<MenuItem key="1_1">Menu 2</MenuItem>
+			<MenuItem key="1_2">Menu 3</MenuItem>
+		</SubMenu>
 	</div>
 </template>
 
-<style scoped></style>
+<style scoped>
+	.wrapper {
+		display: flex;
+		justify-content: start;
+		align-items: center;
+		/* border-radius: 4px;
+		border: 1px solid black; */
+		padding: 4px 0;
+	}
+	.indent {
+		margin: 0 20px;
+		width: 1px;
+		height: 32px;
+		background-color: black;
+	}
+</style>

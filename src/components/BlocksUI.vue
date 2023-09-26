@@ -12,7 +12,6 @@
 		<Tabs
 			id="blockUI"
 			:defaultActiveKey="1"
-			:style="{ height: '100vh' }"
 			:direction="'vertical'">
 			<TabPane :key="1">
 				<template #title>
