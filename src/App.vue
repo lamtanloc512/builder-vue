@@ -26,11 +26,20 @@
 					zIndex: 100,
 				}">
 			</LayoutHeader>
-			<Layout :style="{ marginTop: '50px' }">
+			<Layout
+				:style="{
+					marginTop: '50px',
+					position: 'fixed',
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+				}">
 				<LayoutSider
 					:style="{
-						minWidth: '280px',
 						height: '100%',
+						minWidth: '300px',
+						overflowX: 'auto',
 						borderRight: '1px solid var(--color-border-2)',
 					}">
 					<BlocksUI />
