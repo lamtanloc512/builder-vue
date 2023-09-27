@@ -1,111 +1,118 @@
 <script setup lang="ts">
 	import { Tree, TreeNodeData } from '@arco-design/web-vue';
-	import { IconCaretDown, IconMinus } from '@arco-design/web-vue/es/icon';
+	import { IconCaretDown, IconFullscreen } from '@arco-design/web-vue/es/icon';
 	import { Component, Editor } from 'grapesjs';
+	import { computed } from 'vue';
+	import { watch } from 'vue';
 	import { watchEffect } from 'vue';
+	import { reactive } from 'vue';
 	import { onUnmounted } from 'vue';
 	import { inject, onMounted, ref } from 'vue';
+	import LayerItem from './LayerManagerUI/LayerItem.vue';
 
 	const editor: Editor | undefined = inject('editor');
 	const Layers = editor?.Layers;
 	const Components = editor?.Components;
-	const currentComponent = ref();
 	const root = ref();
 	const layerData = ref();
-	const data = ref<TreeNodeData[]>();
-	const componentResolverMap = new Map<string, Component>();
+	const components = ref();
 
-	watchEffect(() => {
-		console.log(currentComponent.value);
-	});
+	const data = [
+		{
+			title: 'Trunk 0-0',
+			key: '0-0',
+			children: [
+				{
+					title: 'Leaf 0-0-1',
+					key: '0-0-1',
+				},
+				{
+					title: 'Branch 0-0-2',
+					key: '0-0-2',
+					disableCheckbox: true,
+					children: [
+						{
+							draggable: false,
+							title: 'Leaf 0-0-2-1 (Drag disabled)',
+							key: '0-0-2-1',
+						},
+					],
+				},
+			],
+		},
+		{
+			title: 'Trunk 0-1',
+			key: '0-1',
+			children: [
+				{
+					title: 'Branch 0-1-1',
+					key: '0-1-1',
+					checkable: false,
+					children: [
+						{
+							title: 'Leaf 0-1-1-1',
+							key: '0-1-1-1',
+						},
+						{
+							title: 'Leaf 0-1-1-2',
+							key: '0-1-1-2',
+						},
+					],
+				},
+				{
+					title: 'Leaf 0-1-2',
+					key: '0-1-2',
+				},
+			],
+		},
+	];
+
+	const componentResolverMap: Record<string, Component> = {};
 
 	onMounted(() => {
 		editor?.on('layer:root', handleRoot);
-		editor?.on('layer:component', onLayerComponentUpdate);
-		document.addEventListener('mouseover', hoverEvent);
+		editor?.on('layer:component', function (e) {});
 	});
 	onUnmounted(() => {
 		editor?.off('layer:root', handleRoot);
-		editor?.off('layer:component', onLayerComponentUpdate);
-		document.removeEventListener('mouseover', hoverEvent);
+		editor?.off('layer:component', function (e) {
+			console.log(e);
+		});
 	});
-
-	const hoverEvent = (e: MouseEvent) => {
-		const el = document
-			.elementFromPoint(e.clientX, e.clientY)
-			?.closest('[data-key]');
-		if (el instanceof HTMLElement) {
-			currentComponent.value = componentResolverMap.get(`${el?.dataset?.key}`);
-			if (currentComponent.value)
-				Layers?.setLayerData(currentComponent.value, { hovered: true });
-		}
-	};
 
 	const handleRoot = (_root: Component) => {
 		root.value = _root;
 		layerData.value = Layers?.getLayerData(_root);
-		componentResolverMap.set(_root.getId(), _root);
-		data.value = [
-			{
-				key: _root.getId(),
-				title: _root.getName(),
-				draggable: `${_root.get('draggable')}`,
-				children: [
-					...convertToTreeNode(Layers?.getLayerData(_root)?.components),
-				],
-			},
-		];
+		components.value = Layers?.getComponents(_root);
+		componentResolverMap[root.value.getId()] = _root;
+
+		console.log(components.value);
 	};
 
-	const setSelected = (
-		selectedKeys: (string | number)[],
-		data: {
-			selected?: boolean | undefined;
-			selectedNodes: TreeNodeData[];
-			node?: TreeNodeData | undefined;
-			e?: Event | undefined;
-		},
-	) => {
-		currentComponent.value = componentResolverMap.get(`${selectedKeys}`);
-		if (currentComponent.value) {
-			Layers?.setLayerData(
-				currentComponent.value,
-				{ selected: true },
-				{ event: data.e },
-			);
-		}
-	};
-
-	const onLayerComponentUpdate = (_component: Component | undefined) => {
-		const elist = document.querySelectorAll('.tree-node-hovered');
-		elist.forEach((el) => {
-			el.classList.remove('tree-node-hovered');
+	function addLevelPropertyAndReturn(treeData, level = 1) {
+		return treeData.map((node) => {
+			const newNode = { ...node, level };
+			if (node.children) {
+				newNode.children = addLevelPropertyAndReturn(node.children, level + 1);
+			}
+			return newNode;
 		});
-		currentComponent.value = _component;
-		const el = document.querySelector(
-			`[data-key="${currentComponent.value.getId()}"]`,
-		);
-		if (el) {
-			el.classList.add('tree-node-hovered');
-		}
-	};
+	}
 
-	const convertToTreeNode = (
-		components: Component[] | undefined,
-	): TreeNodeData[] => {
+	const convertToTreeNode = (components: Component[] | undefined): any[] => {
+		let i = 0;
 		if (!components || components.length == 0) return [];
 		return components.map((el: Component): any => {
-			componentResolverMap.set(el.getId(), el);
+			componentResolverMap[el.getId()] = el;
 			return {
-				key: el.getId(),
-				title: el.getName(),
-				draggable: el.get('draggable'),
-				children: convertToTreeNode(Layers?.getComponents(el)),
+				level: i++,
+				...convertToTreeNode(Layers?.getComponents(el)),
 			};
 		});
 	};
 
 	const onDrop = ({
+		//@ts-ignore
 		e,
 		dragNode,
 		dropNode,
@@ -116,87 +123,41 @@
 		dropNode: TreeNodeData;
 		dropPosition: number;
 	}) => {
-		const _dragComponent = componentResolverMap.get(`${dragNode.key}`);
-		const _dropComponent = componentResolverMap.get(`${dropNode.key}`);
-		if (!_dragComponent || !_dropComponent) return;
-		const componentIndex = _dragComponent.index() + dropPosition;
+		const currentDragItem = componentResolverMap[`${dragNode.key}`];
+		const currentDropOverItem = componentResolverMap[`${dropNode.key}`];
+
+		if (!currentDragItem || !currentDropOverItem) return;
+		const componentIndex = currentDragItem.index() + dropPosition;
 		const canMove = Components?.canMove(
-			_dropComponent,
-			_dragComponent,
+			currentDropOverItem,
+			currentDragItem,
 			componentIndex,
 		);
 
 		if (canMove && canMove.result) {
-			const _data = data.value;
-			const loop = (
-				_data: TreeNodeData[] | undefined,
-				key: string | number | undefined,
-				callback: any,
-			) => {
-				_data?.some(
-					(item: TreeNodeData, index: number, arr: TreeNodeData[]) => {
-						if (item.key === key) {
-							callback(item, index, arr);
-							return true;
-						}
-						if (item.children) return loop(item.children, key, callback);
-						return false;
-					},
-				);
-			};
-
-			loop(
-				_data,
-				dragNode.key,
-				(_: TreeNodeData, index: number, arr: any[]): any => {
-					arr.splice(index, 1);
-				},
-			);
-
-			if (dropPosition === 0) {
-				loop(_data, dropNode.key, (item: TreeNodeData) => {
-					item.children = item.children || [];
-					item.children.push(dragNode);
-				});
-			} else {
-				loop(
-					_data,
-					dropNode.key,
-					(_: TreeNodeData, index: number, arr: TreeNodeData[]) => {
-						arr.splice(dropPosition < 0 ? index : index + 1, 0, dragNode);
-					},
-				);
-			}
-			_dragComponent.move(_dropComponent, { at: componentIndex });
+			currentDragItem.move(currentDropOverItem, { at: componentIndex });
 		}
+	};
+
+	const onDragStart = (_: DragEvent, node: TreeNodeData) => {
+		console.log(node);
 	};
 </script>
 <template>
-	<div>
-		<Tree
-			v-if="data"
-			draggable
-			showLine
-			blockNode
-			:data="data"
-			:size="'medium'"
-			:hovered="true"
-			@select="setSelected"
-			@drop="onDrop">
-			<template #switcher-icon="_, { isLeaf }">
-				<IconCaretDown v-if="!isLeaf" />
-				<IconMinus v-if="isLeaf" />
-			</template>
-		</Tree>
+	<div
+		v-if="root && components"
+		class="container">
+		<!-- <LayerItem
+			:isRoot="true"
+			:component="root" /> -->
+		<LayerItem
+			:isRoot="false"
+			:component="component"
+			v-for="component in components" />
 	</div>
 </template>
-<style>
-	.tree-node-hovered {
-		box-shadow: inset 0 0 0 1px rgb(var(--arcoblue-6));
-		border-radius: 4px;
-		z-index: 10000;
-	}
-	.arco-tree-node-title:hover {
-		background-color: unset;
+<style scoped>
+	.container {
+		overflow-x: auto;
 	}
 </style>

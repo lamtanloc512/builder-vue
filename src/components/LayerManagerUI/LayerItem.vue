@@ -1,55 +1,77 @@
 <script setup lang="ts">
-	import { MenuItem, SubMenu } from '@arco-design/web-vue';
-	import { IconApps } from '@arco-design/web-vue/es/icon';
+	import {
+		IconApps,
+		IconCaretDown,
+		IconCaretRight,
+	} from '@arco-design/web-vue/es/icon';
+	import { Component, Editor } from 'grapesjs';
+	import { inject } from 'vue';
 	import { ref } from 'vue';
 
+	const editor: Editor | undefined = inject('editor');
+	const layer = editor?.Layers;
 	const props = defineProps<{
-		component: Object;
+		component: Omit<Component, 'level'>;
+		isRoot: boolean;
 	}>();
 
-	const test = ref(false);
+	const toggleShow = ref(false);
+	const childs = !props.isRoot ? layer?.getComponents(props.component) : [];
+	const level = props.component?.level ? props.component?.level : 0;
 </script>
 
 <template>
-	<div class="drop-zone">
-		<div
-			v-if="!test"
-			class="wrapper">
-			<div class="indent"></div>
-			<MenuItem
-				class="w-100 m-0"
-				key="1_0">
-				<template #icon><IconApps /></template>
-				<template #title>Navigation 2</template>
-				<div>Menu 1</div></MenuItem
-			>
+	<div class="layer__item">
+		<div class="layer__item__row">
+			{{ JSON.stringify(level) }}
+			<div
+				v-if="!isRoot"
+				v-for="_ in level"
+				class="indent"></div>
+			<IconCaretRight
+				v-if="!toggleShow && childs?.length > 0"
+				class="me-1"
+				@click="(_) => (toggleShow = true)" />
+			<IconCaretDown
+				v-if="toggleShow"
+				class="me-1"
+				@click="(_) => (toggleShow = false)" />
+			<IconApps class="me-1" />
+			<span>{{ component.getName() }}</span>
 		</div>
-
-		<SubMenu
-			v-if="test"
-			key="1">
-			<template #icon><IconApps /></template>
-			<template #title>Navigation 2</template>
-			<MenuItem key="1_0">Menu 1</MenuItem>
-			<MenuItem key="1_1">Menu 2</MenuItem>
-			<MenuItem key="1_2">Menu 3</MenuItem>
-		</SubMenu>
+		<LayerItem
+			v-for="com in childs"
+			v-if="!isRoot && toggleShow"
+			:component="com"
+			:isRoot="false" />
 	</div>
 </template>
 
 <style scoped>
-	.wrapper {
+	.layer__item {
+		font-size: 0.85rem;
+	}
+	.layer__item.selected {
+		background-color: aquamarine;
+	}
+	.layer__item__row {
+		padding: 8px;
+		border: 2px solid transparent;
 		display: flex;
-		justify-content: start;
+		justify-content: flex-start;
 		align-items: center;
-		/* border-radius: 4px;
-		border: 1px solid black; */
-		padding: 4px 0;
+		height: 20px;
 	}
 	.indent {
-		margin: 0 20px;
-		width: 1px;
-		height: 32px;
-		background-color: black;
+		width: 8px;
+		margin-right: 8px;
+		height: 40px;
+		border-right-style: solid;
+		border-right-width: 1.5px;
+		border-color: black;
+	}
+	.layer__item__row:hover {
+		border: 2px solid black;
+		border-radius: 4px;
 	}
 </style>
