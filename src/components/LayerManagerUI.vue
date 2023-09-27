@@ -138,26 +138,21 @@
 			currentDragItem.move(currentDropOverItem, { at: componentIndex });
 		}
 	};
-
-	const onDragStart = (_: DragEvent, node: TreeNodeData) => {
-		console.log(node);
-	};
 </script>
 <template>
 	<div
 		v-if="root && components"
 		class="container">
-		<!-- <LayerItem
-			:isRoot="true"
-			:component="root" /> -->
 		<LayerItem
-			:isRoot="false"
-			:component="component"
-			v-for="component in components" />
+			:isRoot="true"
+			:component="root"
+			:level="0" />
 	</div>
 </template>
 <style scoped>
 	.container {
+		overflow-y: hidden;
 		overflow-x: auto;
+		height: auto;
 	}
 </style>
