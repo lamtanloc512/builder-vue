@@ -1,38 +1,37 @@
 <script setup lang="ts">
 	import { Component, Editor } from 'grapesjs';
-	import { inject, onUnmounted } from 'vue';
-	import { onMounted, ref } from 'vue';
 	import LayerItem from './LayerManagerUI/LayerItem.vue';
-	import { provide, watch, toRaw, computed } from 'vue';
-	import { isUndefined } from 'lodash';
+	import {
+		provide,
+		toRaw,
+		shallowRef,
+		onMounted,
+		inject,
+		onUnmounted,
+	} from 'vue';
 
 	const proxyEditor: Editor | undefined = inject('editor');
 	const editor = toRaw(proxyEditor);
 	const Layers = editor?.Layers;
-	const root = ref<Component | undefined>(Layers?.getRoot());
+	const root = shallowRef<Component | undefined>();
 	const componentResolverMap: Record<string, Component> = {};
-	const loading = ref(false);
-
-	watch(
-		() => root, // Watch the root value
-		(newValue) => {
-			// Callback function when the root value changes
-			console.log('new root', newValue);
-		},
-		{ deep: true }, // Use a deep watcher to track nested properties
-	);
 
 	onMounted(() => {
 		editor?.on('layer:root', handleRoot);
-		// editor?.on('component:update', handleComponentUpdate);
+		editor?.on('layer:component', handleComponentUpdate);
 	});
 	onUnmounted(() => {
 		editor?.off('layer:root', handleRoot);
-		// editor?.off('component:update', handleComponentUpdate);
+		editor?.off('layer:component', handleComponentUpdate);
 	});
 
+	const handleComponentUpdate = (_component: Component) => {
+		if (_component === Layers?.getRoot()) {
+			updateRoot(_component);
+		}
+	};
+
 	const handleRoot = (_root: Component) => {
-		loading.value = true;
 		updateRoot(_root);
 		if (root) componentResolverMap[_root.getId()] = _root;
 		addToResolverMap(Layers?.getComponents(_root));
@@ -49,7 +48,6 @@
 
 	const updateRoot = (_root: Component) => {
 		root.value = _root;
-		loading.value = false;
 	};
 
 	provide('componentResolverMap', componentResolverMap);
@@ -57,11 +55,10 @@
 <template>
 	<div class="container">
 		<LayerItem
+			v-if="root"
 			:level="0"
 			:isRoot="true"
-			:component="root"
-			v-if="root"
-			@updateRoot="updateRoot" />
+			:component="root" />
 	</div>
 </template>
 <style scoped>

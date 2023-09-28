@@ -84,3 +84,20 @@ span.arco-tree-node-title-text {
 .arco-tabs-left.arco-tabs-vertical .arco-tabs-content {
 	padding-left: 0;
 }
+
+.gjs-toolbar {
+	background-color: rgb(var(--arcoblue-6));
+}
+
+.gjs-selected {
+	outline: 2px solid rgb(var(--arcoblue-6));
+}
+
+.gjs-selected {
+	outline: 2px solid rgb(var(--arcoblue-6)) !important;
+	outline-offset: -2px;
+}
+
+.gjs-selected-parent {
+	outline: 2px solid rgb(var(--arcoblue-6)) !important;
+}

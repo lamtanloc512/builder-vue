@@ -5,14 +5,11 @@
 		IconCaretRight,
 	} from '@arco-design/web-vue/es/icon';
 	import { Component, Editor, LayerData } from 'grapesjs';
-	import { debounce, isNull, isUndefined } from 'lodash';
 	import { inject, toRaw } from 'vue';
-	import { shallowRef } from 'vue';
 	import { ref } from 'vue';
+	import { debounce, isUndefined } from 'lodash';
 	import { onMounted } from 'vue';
 	import { onUnmounted } from 'vue';
-	import { computed } from 'vue';
-	import { toRef } from 'vue';
 
 	const proxyEditor: Editor | undefined = inject('editor');
 	const editor = toRaw(proxyEditor);
@@ -23,31 +20,28 @@
 	const Layers = editor?.Layers;
 	const Components = editor?.Components;
 	const props = defineProps<{
-		component: Component;
+		component: Component | undefined;
 		isRoot: boolean;
 		level: number;
 	}>();
 
 	const emit = defineEmits(['updateRoot']);
-	const name = ref();
-	const components = shallowRef<Component[] | undefined>(
-		Layers?.getComponents(props.component),
-	);
-	const visible = ref(false);
-	const open = ref(false);
-	const selected = ref(false);
-	const hovered = ref(false);
-	const some = ref();
-	// const editing = ref();
+	if (!props.component) emit('updateRoot', Layers?.getRoot());
 	const toggleShow = ref(true);
-	const candDrag = props.component.get('draggable') as boolean;
-	const dragComponent = ref<Component | undefined | null>();
-	const dropComponent = ref<Component | undefined | null>();
+	const name = ref<string | undefined>();
+	const childs = ref<Component | undefined>();
+	const candDrag = props.component
+		? (props.component.get('draggable') as boolean)
+		: false;
+	const hasChild = childs.value ? childs.value?.components.length > 0 : false;
+	const dragComponent = ref<Component | undefined>();
+	const dropComponent = ref<Component | undefined>();
 	const currentLayerItem = ref();
-	const hasChild = computed(() =>
-		components.value ? components.value.length > 0 : false,
-	);
-	const computedLevel = computed(() => toRef(props.level).value - 1);
+	const visible = ref();
+	const open = ref();
+	const selected = ref();
+	const hovered = ref();
+	const editing = ref();
 
 	onMounted(() => {
 		editor?.on('layer:component', handleComponentUpdate);
@@ -57,14 +51,14 @@
 	});
 
 	const handleComponentUpdate = (_component: Component) => {
-		if (_component === props.component) {
-			updateLayerData(Layers?.getLayerData(props.component));
-		}
+		console.log(_component);
+		if (_component == props.component)
+			updateLayer(Layers?.getLayerData(_component));
 	};
-	const updateLayerData = (data: LayerData | undefined) => {
+
+	const updateLayer = (data: LayerData | undefined) => {
 		if (data) {
 			name.value = data.name;
-			components.value = data.components;
 			visible.value = data.visible;
 			open.value = data.open;
 			selected.value = data.selected;
@@ -72,15 +66,7 @@
 		}
 	};
 
-	const setSelected = (ev: MouseEvent) => {
-		Layers?.setLayerData(props.component, { selected: true }, { ev });
-	};
-
-	// const toggleVisible = () => {
-	// 	Layers?.setVisible(props.component, !visible.value);
-	// };
-
-	const onDragStart = (e: DragEvent) => {
+	const onDragStart = debounce((e: DragEvent) => {
 		const el = document.elementFromPoint(e.clientX, e.clientY);
 		const layerItem = el?.closest('[data-id]');
 		if (layerItem instanceof HTMLElement) {
@@ -88,7 +74,7 @@
 				? componentResolverMap[`${layerItem.dataset.id}`]
 				: undefined;
 		}
-	};
+	}, 100);
 
 	const onDragOver = (e: DragEvent) => {
 		e.preventDefault();
@@ -112,87 +98,72 @@
 		}
 	};
 
-	const onDrop = (e: DragEvent) => {
+	const onDrop = debounce((e: DragEvent) => {
 		e.preventDefault();
-		if (
-			!isNull(dragComponent.value) &&
-			!isUndefined(dragComponent.value) &&
-			!isNull(dropComponent.value) &&
-			!isUndefined(dropComponent.value)
-		) {
-			some.value = Components?.canMove(
-				dropComponent.value,
-				dragComponent.value,
+		if (dragComponent.value && dropComponent.value) {
+			const some = Components?.canMove(
+				toRaw(dropComponent.value),
+				toRaw(dragComponent.value),
 			);
-		}
-	};
 
-	const onDragLeave = (_: DragEvent) => {
+			if (some && some.result) {
+				// debounce(() => {
+				// }, 50);
+				some.source?.move(some.target, { at: 0 });
+				emit('updateRoot', Layers?.getRoot());
+			}
+		}
+	});
+	const onDragLeave = debounce((_: DragEvent) => {
 		if (currentLayerItem.value instanceof HTMLElement) {
 			currentLayerItem.value.classList.remove('over');
 		}
-	};
-
-	const onDragEnd = () => {
-		if (some.value && some.value.result) {
-			const dragNode = toRaw(some.value.source);
-			const dropNode = toRaw(some.value.target);
-			dragNode?.move(dropNode, { at: 0 });
-			dragComponent.value = null;
-			dropComponent.value = null;
-			emit('updateRoot', Layers?.getRoot());
-		}
-	};
+	});
 
 	const onMouseEnter = debounce(() => {
-		Layers?.setLayerData(props.component, { hovered: true });
-	}, 50);
+		if (props.component)
+			Layers?.setLayerData(props.component, { hovered: true });
+	});
 	const onMouseLeave = debounce(() => {
-		Layers?.setLayerData(props.component, { hovered: false });
-	}, 50);
+		if (props.component)
+			Layers?.setLayerData(props.component, { hovered: false });
+	});
 </script>
 
 <template>
+	{{ JSON.stringify(component) }}
 	<div
 		class="layer__item"
-		@click.stop="setSelected"
 		@dragstart="onDragStart"
 		@dragover="onDragOver"
 		@dragleave="onDragLeave"
-		@dragend="onDragEnd"
 		@drop="onDrop"
+		@mouseenter="onMouseEnter"
+		@mouseleave="onMouseLeave"
 		:data-id="component.getId()">
 		<div
-			:class="[
-				'layer__item__row',
-				selected ? 'selected' : '',
-				hovered ? 'hover' : '',
-			]"
-			@mouseenter="onMouseEnter"
-			@mouseleave="onMouseLeave"
+			class="layer__item__row"
 			:draggable="candDrag ? candDrag : false">
 			<div
-				v-if="level > 1"
-				v-for="_ in computedLevel"
-				class="indent"></div>
+				v-for="_ in level"
+				:class="['indent']"></div>
 			<IconCaretRight
-				v-if="!toggleShow && hasChild && level > 0"
+				v-if="!toggleShow && hasChild"
 				class="me-1"
 				@click="(_) => (toggleShow = true)" />
 			<IconCaretDown
-				v-if="toggleShow && hasChild && level > 0"
+				v-if="toggleShow && hasChild"
 				class="me-1"
 				@click="(_) => (toggleShow = false)" />
 			<IconApps class="me-1" />
-			<span>{{ component.getName() }}</span>
+			<span>{{ name }}</span>
 		</div>
 		<LayerItem
+			v-for="com in childs"
 			v-if="toggleShow"
-			v-for="com in components"
 			:component="com"
 			:isRoot="false"
-			:level="level + 1"
-			:key="com.getId()" />
+			:level="level + 1" />
 	</div>
 </template>
 
@@ -208,27 +179,30 @@
 	}
 	.layer__item__row {
 		padding: 8px;
-		border: 1px solid transparent;
-		cursor: pointer;
+		border: 2px solid transparent;
 		display: flex;
 		justify-content: flex-start;
 		align-items: center;
 		height: 20px;
 	}
-	.layer__item__row.selected {
-		box-shadow: inset 0 0 0 2px rgb(var(--arcoblue-7));
-		border-radius: 4px;
-	}
-	.layer__item__row.hover {
-		box-shadow: inset 0 0 0 2px rgb(var(--arcoblue-4));
-		border-radius: 4px;
-	}
 	.indent {
-		width: 6px;
+		width: 8px;
 		margin-right: 8px;
 		height: 40px;
 		border-right-style: solid;
 		border-right-width: 1.5px;
 		border-color: black;
+	}
+	.indent_transparent {
+		width: 8px;
+		margin-right: 8px;
+		height: 40px;
+		border-right-style: solid;
+		border-right-width: 1.5px;
+		border-color: transparent;
+	}
+	.layer__item__row:hover {
+		border: 2px solid rgb(var(--arcoblue-6));
+		border-radius: 4px;
 	}
 </style>
