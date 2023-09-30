@@ -8,9 +8,10 @@
 	import LayerMangerUI from './LayerManagerUI.vue';
 </script>
 <template>
-	<div>
+	<div class="h-100">
 		<Tabs
 			id="blockUI"
+			class="h-100"
 			:defaultActiveKey="1"
 			:direction="'vertical'">
 			<TabPane :key="1">

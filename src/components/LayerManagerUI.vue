@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { Component, Editor } from 'grapesjs';
+	import { Component, Components, Editor } from 'grapesjs';
 	import LayerItem from './LayerManagerUI/LayerItem.vue';
 	import {
 		provide,
@@ -9,16 +9,35 @@
 		inject,
 		onUnmounted,
 	} from 'vue';
+	import { Draggable, Sortable } from '@shopify/draggable';
+	import { ref } from 'vue';
+	import { Tree, TreeNodeData } from '@arco-design/web-vue';
+	import { unref } from 'vue';
 
 	const proxyEditor: Editor | undefined = inject('editor');
 	const editor = toRaw(proxyEditor);
 	const Layers = editor?.Layers;
+	const Components = editor?.Components;
 	const root = shallowRef<Component | undefined>();
+	const rootNodeRef = ref();
 	const componentResolverMap: Record<string, Component> = {};
 
 	onMounted(() => {
 		editor?.on('layer:root', handleRoot);
 		editor?.on('layer:component', handleComponentUpdate);
+
+		const wrapper = document.querySelectorAll('.container__draggable');
+		console.log(wrapper);
+		if (wrapper.length !== 0) {
+			const sortable = new Sortable(wrapper, {
+				draggable: '.layer__item.isChild.candDrag',
+				mirror: {
+					xAxis: false,
+					yAxis: true,
+					constrainDimensions: true,
+				},
+			});
+		}
 	});
 	onUnmounted(() => {
 		editor?.off('layer:root', handleRoot);

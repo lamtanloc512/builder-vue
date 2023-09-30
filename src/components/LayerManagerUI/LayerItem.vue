@@ -5,7 +5,7 @@
 		IconCaretRight,
 	} from '@arco-design/web-vue/es/icon';
 	import { Component, Editor, LayerData } from 'grapesjs';
-	import { debounce, isNull, isUndefined } from 'lodash';
+	import { clone, cloneDeep, debounce, isNull, isUndefined } from 'lodash';
 	import { inject, toRaw } from 'vue';
 	import { shallowRef } from 'vue';
 	import { ref } from 'vue';
@@ -13,6 +13,7 @@
 	import { onUnmounted } from 'vue';
 	import { computed } from 'vue';
 	import { toRef } from 'vue';
+	import Draggable from 'vuedraggable';
 
 	const proxyEditor: Editor | undefined = inject('editor');
 	const editor = toRaw(proxyEditor);
@@ -38,12 +39,13 @@
 	const selected = ref(false);
 	const hovered = ref(false);
 	const some = ref();
+	const dropIndicator = ref();
 	// const editing = ref();
 	const toggleShow = ref(true);
 	const candDrag = props.component.get('draggable') as boolean;
 	const dragComponent = ref<Component | undefined | null>();
 	const dropComponent = ref<Component | undefined | null>();
-	const currentLayerItem = ref();
+	const onDragOverLayerItem = ref();
 	const hasChild = computed(() =>
 		components.value ? components.value.length > 0 : false,
 	);
@@ -90,30 +92,25 @@
 		}
 	};
 
-	const onDragOver = (e: DragEvent) => {
-		e.preventDefault();
-		const el = document.elementFromPoint(e.clientX, e.clientY);
-		currentLayerItem.value = el?.closest('[data-id]');
-		if (currentLayerItem.value instanceof HTMLElement) {
-			currentLayerItem.value.classList.remove('over');
-			dropComponent.value = componentResolverMap
-				? componentResolverMap[`${currentLayerItem.value.dataset.id}`]
-				: undefined;
-			if (
-				dragComponent.value?.getId() != dropComponent.value?.getId() &&
-				dropComponent.value?.get('droppable')
-			) {
-				// console.log('oke', layerOverItem);
-				currentLayerItem.value.classList.add('over');
-			} else {
-				// console.log('false', layerOverItem);
-				currentLayerItem.value.classList.remove('over');
+	const onDragMove = (evt: any) => {
+		onDragOverLayerItem.value = evt.to;
+		if (onDragOverLayerItem.value) {
+			const currentOnDragOverLayerItem =
+				onDragOverLayerItem.value.closest('[data-id]');
+			if (onDragOverLayerItem.value) {
+				dropComponent.value = componentResolverMap
+					? componentResolverMap[`${currentOnDragOverLayerItem.dataset.id}`]
+					: undefined;
+				if (onDragOverLayerItem.value.classList.contains('canDrop')) {
+					console.log(onDragOverLayerItem.value);
+					// onDragOverLayerItem.value.classList.add('indicator');
+				}
 			}
 		}
 	};
 
-	const onDrop = (e: DragEvent) => {
-		e.preventDefault();
+	const onDragEnd = (e) => {
+		// console.log(e);
 		if (
 			!isNull(dragComponent.value) &&
 			!isUndefined(dragComponent.value) &&
@@ -125,43 +122,64 @@
 				dragComponent.value,
 			);
 		}
-	};
 
-	const onDragLeave = (_: DragEvent) => {
-		if (currentLayerItem.value instanceof HTMLElement) {
-			currentLayerItem.value.classList.remove('over');
-		}
-	};
-
-	const onDragEnd = () => {
 		if (some.value && some.value.result) {
 			const dragNode = toRaw(some.value.source);
 			const dropNode = toRaw(some.value.target);
-			dragNode?.move(dropNode, { at: 0 });
+			dragNode?.move(dropNode, { at: e.newIndex });
 			dragComponent.value = null;
 			dropComponent.value = null;
+			dropIndicator.value = null;
+			some.value = {};
 			emit('updateRoot', Layers?.getRoot());
 		}
 	};
 
-	const onMouseEnter = debounce(() => {
+	const onMouseEnter = () => {
 		Layers?.setLayerData(props.component, { hovered: true });
-	}, 50);
-	const onMouseLeave = debounce(() => {
+	};
+	const onMouseLeave = () => {
 		Layers?.setLayerData(props.component, { hovered: false });
-	}, 50);
+	};
+
+	type draggableOnMoveEvt = {
+		to: HTMLElement;
+		dragged: HTMLElement;
+		draggedRect: DOMRect;
+		related: HTMLElement;
+		willInsertAfter: boolean;
+	};
+
+	function checkMove(evt: draggableOnMoveEvt) {
+		const el = evt.to;
+		if (!el) return false;
+		return el.classList.contains('canNotDrop') ? false : true;
+	}
+
+	type Moved = {
+		element: Component;
+		oldIndex: number;
+		newIndex: number;
+	};
+
+	const onChange = (e: any) => {
+		const moved: Moved = e.moved;
+		if (moved) {
+		}
+	};
 </script>
 
 <template>
 	<div
-		class="layer__item"
+		:class="[
+			'layer__item',
+			isRoot ? 'isRoot' : 'isChild',
+			hasChild ? 'hasChild' : '',
+		]"
 		@click.stop="setSelected"
-		@dragstart="onDragStart"
-		@dragover="onDragOver"
-		@dragleave="onDragLeave"
-		@dragend="onDragEnd"
-		@drop="onDrop"
-		:data-id="component.getId()">
+		:data-id="component.getId()"
+		:tabindex="component.index()"
+		:draggable="candDrag">
 		<div
 			:class="[
 				'layer__item__row',
@@ -169,8 +187,7 @@
 				hovered ? 'hover' : '',
 			]"
 			@mouseenter="onMouseEnter"
-			@mouseleave="onMouseLeave"
-			:draggable="candDrag ? candDrag : false">
+			@mouseleave="onMouseLeave">
 			<div
 				v-if="level > 1"
 				v-for="_ in computedLevel"
@@ -183,22 +200,46 @@
 				v-if="toggleShow && hasChild && level > 0"
 				class="me-1"
 				@click="(_) => (toggleShow = false)" />
-			<IconApps class="me-1" />
-			<span>{{ component.getName() }}</span>
+			<div v-if="component.getIcon() != ''">{{ component.getIcon() }}</div>
+			<IconApps
+				v-else
+				class="me-1" />
+
+			<span>{{ component.getName() + component.cid }}</span>
 		</div>
-		<LayerItem
-			v-if="toggleShow"
-			v-for="com in components"
-			:component="com"
-			:isRoot="false"
-			:level="level + 1"
-			:key="com.getId()" />
+		<Draggable
+			tag="ul"
+			:class="[
+				'dropArea',
+				!component.get('droppable') ? 'canNotDrop' : 'canDrop',
+			]"
+			dragClass="drag__class"
+			ghostClass="ghost__class"
+			:group="'child'"
+			:list="Layers?.getComponents(component)"
+			:itemKey="(e: Component) => e.getId()"
+			:move="checkMove"
+			@move="onDragMove"
+			@change="onChange"
+			@start="(e) => onDragStart(e.originalEvent)"
+			@end="onDragEnd">
+			<template #item="{ element: component }">
+				<LayerItem
+					v-if="toggleShow"
+					:component="component"
+					:isRoot="false"
+					:level="level + 1"
+					:tabindex="component.index()"
+					:key="component.getId()" />
+			</template>
+		</Draggable>
 	</div>
 </template>
 
 <style scoped>
 	.layer__item {
 		font-size: 0.85rem;
+		position: relative;
 	}
 	.layer__item.over {
 		background-color: rgb(var(--green-3));
@@ -230,5 +271,57 @@
 		border-right-style: solid;
 		border-right-width: 1.5px;
 		border-color: black;
+	}
+
+	ul {
+		padding-left: 0;
+		margin: 0;
+	}
+
+	.drag__class .indent {
+		border-color: transparent;
+	}
+	.ghost__class .indent {
+		visibility: hidden;
+		opacity: 0;
+	}
+	.ghost__class {
+		background-color: rgb(251, 255, 2);
+	}
+	.canNotDrop {
+		position: relative;
+	}
+	.canDrop {
+		position: relative;
+	}
+	/* .canNotDrop.indicator {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		width: 100%;
+		height: 2px;
+		background: red;
+	} */
+	.canDrop.indicator__before::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 31px;
+		right: 0;
+		height: 2px;
+		background: greenyellow;
+	}
+	.canDrop.indicator__after::before {
+		content: '';
+		position: absolute;
+		bottom: 0;
+		left: 31px;
+		right: 0;
+		height: 2px;
+		background: greenyellow;
+	}
+
+	.dropArea {
 	}
 </style>

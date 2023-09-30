@@ -55,7 +55,7 @@
 				</LayoutContent>
 				<LayoutSider
 					:style="{
-						minWidth: '280px',
+						minWidth: '260px',
 						height: '100%',
 						borderLeft: '1px solid var(--color-border-2)',
 						backgroundColor: 'var(--color-fill-2)',
