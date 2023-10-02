@@ -20,7 +20,7 @@
 		shallowRef,
 		toRaw,
 	} from 'vue';
-	import NewLayerItem from './LayerManagerUI/NewLayerItem.vue';
+	import LayerItem from './LayerManagerUI/LayerItem.vue';
 
 	const proxyEditor: Editor | undefined = inject('editor');
 	const editor = toRaw(proxyEditor);
@@ -109,6 +109,7 @@
 			if (draggOverComponent.value) {
 				const childs = Layers?.getComponents(draggOverComponent.value);
 				const hasChild = childs ? childs.length > 0 : false;
+				// @ts-ignore
 				const droppable = draggOverComponent.value.get('droppable');
 				if (hasChild || droppable) {
 					checkMove.value = Components?.canMove(
@@ -197,7 +198,7 @@
 </script>
 <template>
 	<div class="layer--container">
-		<NewLayerItem
+		<LayerItem
 			:isRoot="true"
 			:level="0"
 			:component="root"
@@ -220,9 +221,9 @@
 	.draggable-mirror .indent {
 		background-color: transparent;
 	}
-	.draggable-mirror .layer--header .layer--button {
-		/* border: 1px solid black; */
-	}
+	/* .draggable-mirror .layer--header .layer--button {
+		border: 1px solid black;
+	} */
 	.indicator--before::before {
 		position: absolute;
 		content: '';

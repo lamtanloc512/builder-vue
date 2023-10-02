@@ -1,51 +1,38 @@
 <script setup lang="ts">
-	import { IconApps, IconCaretDown, IconCaretRight } from '@arco-design/web-vue/es/icon';
+	import { Button } from '@arco-design/web-vue';
+	import {
+		IconCaretDown,
+		IconDragDotVertical,
+		IconEyeInvisible,
+	} from '@arco-design/web-vue/es/icon';
 	import { Component, Editor, LayerData } from 'grapesjs';
-	import { clone, cloneDeep, debounce, isNull, isUndefined } from 'lodash';
-	import { inject, toRaw } from 'vue';
-	import { shallowRef } from 'vue';
-	import { ref } from 'vue';
-	import { onMounted } from 'vue';
-	import { onUnmounted } from 'vue';
-	import { computed } from 'vue';
-	import { toRef } from 'vue';
-	import Draggable from 'vuedraggable';
+	import { toNumber } from 'lodash';
+	import { computed, inject, onMounted, onUnmounted, ref, toRaw } from 'vue';
 
 	const proxyEditor: Editor | undefined = inject('editor');
 	const editor = toRaw(proxyEditor);
-	const componentResolverMap: Record<string, Component> | undefined =
-		inject('componentResolverMap');
 
 	const Layers = editor?.Layers;
-	const Components = editor?.Components;
 	const props = defineProps<{
-		component: Component;
-		isRoot: boolean;
-		level: number;
+		title: String;
+		component: Component | undefined;
+		children: Component[] | undefined;
+		level: Number;
+		isRoot: Boolean;
 	}>();
-
-	const emit = defineEmits(['updateRoot']);
 	const name = ref();
-	const components = shallowRef<Component[] | undefined>(Layers?.getComponents(props.component));
-	const name = ref();
-	const visible = ref(false);
+	const visible = ref(true);
 	const open = ref(false);
 	const selected = ref(false);
 	const hovered = ref(false);
-	const some = ref();
-	const dropIndicator = ref();
-	// const editing = ref();
-	const toggleShow = ref(true);
-	const candDrag = props.component.get('draggable') as boolean;
-	const dragComponent = ref<Component | undefined | null>();
-	const dropComponent = ref<Component | undefined | null>();
-	const onDragOverLayerItem = ref();
-	const hasChild = computed(() => (components.value ? components.value.length > 0 : false));
-	const computedLevel = computed(() => toRef(props.level).value - 1);
+	const show = ref(true);
+	const toggle = () => (show.value = !show.value);
+	const hasChild = computed(() => (props.children ? props.children?.length > 0 : false));
 
 	onMounted(() => {
 		editor?.on('layer:component', handleComponentUpdate);
 	});
+
 	onUnmounted(() => {
 		editor?.off('layer:component', handleComponentUpdate);
 	});
@@ -55,10 +42,10 @@
 			updateLayerData(Layers?.getLayerData(props.component));
 		}
 	};
+
 	const updateLayerData = (data: LayerData | undefined) => {
 		if (data) {
 			name.value = data.name;
-			components.value = data.components;
 			visible.value = data.visible;
 			open.value = data.open;
 			selected.value = data.selected;
@@ -67,233 +54,106 @@
 	};
 
 	const setSelected = (ev: MouseEvent) => {
-		Layers?.setLayerData(props.component, { selected: true }, { ev });
-	};
-
-	// const toggleVisible = () => {
-	// 	Layers?.setVisible(props.component, !visible.value);
-	// };
-
-	const onDragStart = (e: DragEvent) => {
-		const el = document.elementFromPoint(e.clientX, e.clientY);
-		const layerItem = el?.closest('[data-id]');
-		if (layerItem instanceof HTMLElement) {
-			dragComponent.value = componentResolverMap
-				? componentResolverMap[`${layerItem.dataset.id}`]
-				: undefined;
+		if (props.component) {
+			Layers?.setLayerData(props.component, { selected: true }, { ev });
 		}
 	};
-
-	const onDragMove = (evt: any) => {
-		onDragOverLayerItem.value = evt.to;
-		if (onDragOverLayerItem.value) {
-			const currentOnDragOverLayerItem = onDragOverLayerItem.value.closest('[data-id]');
-			if (onDragOverLayerItem.value) {
-				dropComponent.value = componentResolverMap
-					? componentResolverMap[`${currentOnDragOverLayerItem.dataset.id}`]
-					: undefined;
-				if (onDragOverLayerItem.value.classList.contains('canDrop')) {
-					console.log(onDragOverLayerItem.value);
-					// onDragOverLayerItem.value.classList.add('indicator');
-				}
-			}
-		}
-	};
-
-	const onDragEnd = (e) => {
-		// console.log(e);
-		if (
-			!isNull(dragComponent.value) &&
-			!isUndefined(dragComponent.value) &&
-			!isNull(dropComponent.value) &&
-			!isUndefined(dropComponent.value)
-		) {
-			some.value = Components?.canMove(dropComponent.value, dragComponent.value);
-		}
-
-		if (some.value && some.value.result) {
-			const dragNode = toRaw(some.value.source);
-			const dropNode = toRaw(some.value.target);
-			dragNode?.move(dropNode, { at: e.newIndex });
-			dragComponent.value = null;
-			dropComponent.value = null;
-			dropIndicator.value = null;
-			some.value = {};
-			emit('updateRoot', Layers?.getRoot());
+	const setUnSelected = (ev: MouseEvent) => {
+		if (props.component) {
+			Layers?.setLayerData(props.component, { selected: true }, { ev });
 		}
 	};
 
 	const onMouseEnter = () => {
-		Layers?.setLayerData(props.component, { hovered: true });
-	};
-	const onMouseLeave = () => {
-		Layers?.setLayerData(props.component, { hovered: false });
-	};
-
-	type draggableOnMoveEvt = {
-		to: HTMLElement;
-		dragged: HTMLElement;
-		draggedRect: DOMRect;
-		related: HTMLElement;
-		willInsertAfter: boolean;
-	};
-
-	function checkMove(evt: draggableOnMoveEvt) {
-		const el = evt.to;
-		if (!el) return false;
-		return el.classList.contains('canNotDrop') ? false : true;
-	}
-
-	type Moved = {
-		element: Component;
-		oldIndex: number;
-		newIndex: number;
-	};
-
-	const onChange = (e: any) => {
-		const moved: Moved = e.moved;
-		if (moved) {
+		if (props.component) {
+			Layers?.setLayerData(props.component, { hovered: true });
 		}
 	};
+
+	const onMouseLeave = () => {
+		if (props.component) {
+			Layers?.setLayerData(props.component, { hovered: false });
+		}
+	};
+
+	const toggleVisible = () => {
+		if (props.component) {
+			Layers?.setVisible(props.component, !visible.value);
+		}
+	};
+	//@ts-ignore
+	const canDrag = computed(() => props.component?.get('draggable'));
 </script>
 
 <template>
-	<div
-		:class="['layer__item', isRoot ? 'isRoot' : 'isChild', hasChild ? 'hasChild' : '']"
+	<li
+		:class="[isRoot ? '' : 'layer--item']"
+		:data-id="component?.getId()"
+		data-draggable
 		@click.stop="setSelected"
-		:data-id="component.getId()"
-		:tabindex="component.index()"
-		:draggable="candDrag">
-		<div
-			:class="['layer__item__row', selected ? 'selected' : '', hovered ? 'hover' : '']"
-			@mouseenter="onMouseEnter"
-			@mouseleave="onMouseLeave">
-			<div v-if="level > 1" v-for="_ in computedLevel" class="indent"></div>
-			<IconCaretRight
-				v-if="!toggleShow && hasChild && level > 0"
-				class="me-1"
-				@click="(_) => (toggleShow = true)" />
-			<IconCaretDown
-				v-if="toggleShow && hasChild && level > 0"
-				class="me-1"
-				@click="(_) => (toggleShow = false)" />
-			<div v-if="component.getIcon() != ''">{{ component.getIcon() }}</div>
-			<IconApps v-else class="me-1" />
-
-			<span>{{ component.getName() + component.cid }}</span>
+		@dblclick="setUnSelected">
+		<div class="layer--header">
+			<div v-for="_ in level" class="indent"></div>
+			<Button
+				@mouseenter="onMouseEnter"
+				@mouseleave="onMouseLeave"
+				:class="['layer--button', selected ? 'selected' : '', hovered ? 'hover' : '']"
+				type="text"
+				long
+				data-button>
+				<template #icon>
+					<IconCaretRight v-if="!show && hasChild && !isRoot" @click="toggle" />
+					<IconCaretDown v-if="show && hasChild && !isRoot" @click="toggle" />
+					<IconDragDotVertical v-if="!isRoot && canDrag" class="ms-1" />
+					<IconMindMapping v-if="isRoot" class="ms-1" />
+					<span class="ms-1">{{ component?.getIcon() }}</span>
+					<span class="ms-1">{{ title }}</span>
+				</template>
+				<div class="d-flex justify-content-between align-items-center">
+					<div v-if="hovered || selected">
+						<IconEye v-if="visible" @click="toggleVisible" class="ms-2" />
+					</div>
+					<div v-if="!visible">
+						<IconEyeInvisible @click="toggleVisible" class="ms-2" />
+					</div>
+				</div>
+			</Button>
 		</div>
-		<Draggable
-			tag="ul"
-			:class="['dropArea', !component.get('droppable') ? 'canNotDrop' : 'canDrop']"
-			dragClass="drag__class"
-			ghostClass="ghost__class"
-			:group="'child'"
-			:list="Layers?.getComponents(component)"
-			:itemKey="(e: Component) => e.getId()"
-			:move="checkMove"
-			@move="onDragMove"
-			@change="onChange"
-			@start="(e) => onDragStart(e.originalEvent)"
-			@end="onDragEnd">
-			<template #item="{ element: component }">
-				<LayerItem
-					v-if="toggleShow"
-					:component="component"
-					:isRoot="false"
-					:level="level + 1"
-					:tabindex="component.index()"
-					:key="component.getId()" />
-			</template>
-		</Draggable>
-	</div>
+		<ul class="layer--wrapper">
+			<LayerItem
+				v-if="show"
+				v-for="component in children"
+				:isRoot="false"
+				:component="component"
+				:children="component ? Layers?.getComponents(component) : []"
+				:title="component.getName()"
+				:level="toNumber(level) + 1" />
+		</ul>
+	</li>
 </template>
 
 <style scoped>
-	.layer__item {
-		font-size: 0.85rem;
+	.layer--header {
+		display: flex;
+	}
+	.layer--button {
+		justify-content: space-between;
+		padding: 0px 12px;
+		color: var(--color-neutral-10);
 		position: relative;
 	}
-	.layer__item.over {
-		background-color: rgb(var(--green-3));
-	}
-	.layer__item.selected {
-		background-color: aquamarine;
-	}
-	.layer__item__row {
-		padding: 8px;
-		border: 1px solid transparent;
-		cursor: pointer;
-		display: flex;
-		justify-content: flex-start;
-		align-items: center;
-		height: 20px;
-	}
-	.layer__item__row.selected {
+	.layer--button.selected {
 		box-shadow: inset 0 0 0 2px rgb(var(--arcoblue-7));
 		border-radius: 4px;
 	}
-	.layer__item__row.hover {
+	.layer--button.hover {
 		box-shadow: inset 0 0 0 2px rgb(var(--arcoblue-4));
 		border-radius: 4px;
 	}
 	.indent {
-		width: 6px;
-		margin-right: 8px;
-		height: 40px;
-		border-right-style: solid;
-		border-right-width: 1.5px;
-		border-color: black;
-	}
-
-	ul {
-		padding-left: 0;
-		margin: 0;
-	}
-
-	.drag__class .indent {
-		border-color: transparent;
-	}
-	.ghost__class .indent {
-		visibility: hidden;
-		opacity: 0;
-	}
-	.ghost__class {
-		background-color: rgb(251, 255, 2);
-	}
-	.canNotDrop {
-		position: relative;
-	}
-	.canDrop {
-		position: relative;
-	}
-	/* .canNotDrop.indicator {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		width: 100%;
-		height: 2px;
-		background: red;
-	} */
-	.canDrop.indicator__before::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 31px;
-		right: 0;
-		height: 2px;
-		background: greenyellow;
-	}
-	.canDrop.indicator__after::before {
-		content: '';
-		position: absolute;
-		bottom: 0;
-		left: 31px;
-		right: 0;
-		height: 2px;
-		background: greenyellow;
-	}
-
-	.dropArea {
+		width: 1px;
+		height: 32px;
+		background-color: var(--color-neutral-6);
+		margin-left: 20px;
 	}
 </style>
