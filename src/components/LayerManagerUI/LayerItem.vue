@@ -1,9 +1,5 @@
 <script setup lang="ts">
-	import {
-		IconApps,
-		IconCaretDown,
-		IconCaretRight,
-	} from '@arco-design/web-vue/es/icon';
+	import { IconApps, IconCaretDown, IconCaretRight } from '@arco-design/web-vue/es/icon';
 	import { Component, Editor, LayerData } from 'grapesjs';
 	import { clone, cloneDeep, debounce, isNull, isUndefined } from 'lodash';
 	import { inject, toRaw } from 'vue';
@@ -17,9 +13,8 @@
 
 	const proxyEditor: Editor | undefined = inject('editor');
 	const editor = toRaw(proxyEditor);
-	const componentResolverMap: Record<string, Component> | undefined = inject(
-		'componentResolverMap',
-	);
+	const componentResolverMap: Record<string, Component> | undefined =
+		inject('componentResolverMap');
 
 	const Layers = editor?.Layers;
 	const Components = editor?.Components;
@@ -31,9 +26,8 @@
 
 	const emit = defineEmits(['updateRoot']);
 	const name = ref();
-	const components = shallowRef<Component[] | undefined>(
-		Layers?.getComponents(props.component),
-	);
+	const components = shallowRef<Component[] | undefined>(Layers?.getComponents(props.component));
+	const name = ref();
 	const visible = ref(false);
 	const open = ref(false);
 	const selected = ref(false);
@@ -46,9 +40,7 @@
 	const dragComponent = ref<Component | undefined | null>();
 	const dropComponent = ref<Component | undefined | null>();
 	const onDragOverLayerItem = ref();
-	const hasChild = computed(() =>
-		components.value ? components.value.length > 0 : false,
-	);
+	const hasChild = computed(() => (components.value ? components.value.length > 0 : false));
 	const computedLevel = computed(() => toRef(props.level).value - 1);
 
 	onMounted(() => {
@@ -95,8 +87,7 @@
 	const onDragMove = (evt: any) => {
 		onDragOverLayerItem.value = evt.to;
 		if (onDragOverLayerItem.value) {
-			const currentOnDragOverLayerItem =
-				onDragOverLayerItem.value.closest('[data-id]');
+			const currentOnDragOverLayerItem = onDragOverLayerItem.value.closest('[data-id]');
 			if (onDragOverLayerItem.value) {
 				dropComponent.value = componentResolverMap
 					? componentResolverMap[`${currentOnDragOverLayerItem.dataset.id}`]
@@ -117,10 +108,7 @@
 			!isNull(dropComponent.value) &&
 			!isUndefined(dropComponent.value)
 		) {
-			some.value = Components?.canMove(
-				dropComponent.value,
-				dragComponent.value,
-			);
+			some.value = Components?.canMove(dropComponent.value, dragComponent.value);
 		}
 
 		if (some.value && some.value.result) {
@@ -171,27 +159,16 @@
 
 <template>
 	<div
-		:class="[
-			'layer__item',
-			isRoot ? 'isRoot' : 'isChild',
-			hasChild ? 'hasChild' : '',
-		]"
+		:class="['layer__item', isRoot ? 'isRoot' : 'isChild', hasChild ? 'hasChild' : '']"
 		@click.stop="setSelected"
 		:data-id="component.getId()"
 		:tabindex="component.index()"
 		:draggable="candDrag">
 		<div
-			:class="[
-				'layer__item__row',
-				selected ? 'selected' : '',
-				hovered ? 'hover' : '',
-			]"
+			:class="['layer__item__row', selected ? 'selected' : '', hovered ? 'hover' : '']"
 			@mouseenter="onMouseEnter"
 			@mouseleave="onMouseLeave">
-			<div
-				v-if="level > 1"
-				v-for="_ in computedLevel"
-				class="indent"></div>
+			<div v-if="level > 1" v-for="_ in computedLevel" class="indent"></div>
 			<IconCaretRight
 				v-if="!toggleShow && hasChild && level > 0"
 				class="me-1"
@@ -201,18 +178,13 @@
 				class="me-1"
 				@click="(_) => (toggleShow = false)" />
 			<div v-if="component.getIcon() != ''">{{ component.getIcon() }}</div>
-			<IconApps
-				v-else
-				class="me-1" />
+			<IconApps v-else class="me-1" />
 
 			<span>{{ component.getName() + component.cid }}</span>
 		</div>
 		<Draggable
 			tag="ul"
-			:class="[
-				'dropArea',
-				!component.get('droppable') ? 'canNotDrop' : 'canDrop',
-			]"
+			:class="['dropArea', !component.get('droppable') ? 'canNotDrop' : 'canDrop']"
 			dragClass="drag__class"
 			ghostClass="ghost__class"
 			:group="'child'"
