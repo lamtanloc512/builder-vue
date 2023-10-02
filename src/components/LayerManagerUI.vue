@@ -1,5 +1,6 @@
 <script setup lang="ts">
 	import {
+		BaseEvent,
 		DragMoveEvent,
 		DragOverEvent,
 		DragStartEvent,
@@ -31,6 +32,8 @@
 	const draggableMoveEvent = 'drag:move';
 	const draggableOverEvent = 'drag:over';
 	const draggableStoppedEvent = 'drag:stopped';
+	// const draggOuEvent = 'drag:out';
+	// const draggOutContainerEvent = 'drag:out:container';
 
 	let draggable: Draggable | undefined;
 
@@ -42,6 +45,7 @@
 			draggable = new Draggable(wrapper, {
 				draggable: '.layer--item',
 				mirror: {
+					appendTo: 'body',
 					constrainDimensions: true,
 				},
 				delay: {
@@ -56,6 +60,12 @@
 			draggable.on(draggableOverEvent, onDragOver);
 			//@ts-ignore
 			draggable.on(draggableStoppedEvent, onDragStopped);
+			// draggable.on(draggOuEvent, function (e) {
+			// 	console.log(draggOuEvent, e);
+			// });
+			// draggable.on(draggOutContainerEvent, function (e) {
+			// 	console.log(draggOutContainerEvent, e);
+			// });
 		}
 	});
 
@@ -76,10 +86,22 @@
 			draggingComponent.value = toRaw(componentResolverMap[`${componentId}`]);
 		}
 	};
-	const onDragMove = (_: DragMoveEvent): void => {
-		// console.log(draggableMoveEvent, e);
+	const onDragMove = (e: DragMoveEvent): void => {
+		if (e.originalEvent instanceof MouseEvent) {
+			const currentEl = e.originalEvent.target as HTMLElement;
+			if (currentEl && currentEl.getAttribute('class') == 'gjs-frame') {
+				if (draggable) {
+					const baseEvent = draggable as unknown as BaseEvent;
+					baseEvent.cancel();
+				}
+			}
+		}
 	};
 	const onDragOver = (e: DragOverEvent) => {
+		if (checkMove.value && !checkMove.value.result && indicatorEl.value) {
+			indicatorEl.value.classList.remove('indicator--before');
+			indicatorEl.value.classList.remove('indicator--after');
+		}
 		const layerOverItem = e.over.closest('[data-draggable]');
 		if (layerOverItem instanceof HTMLElement) {
 			const componentId = layerOverItem.dataset.id;
@@ -140,7 +162,7 @@
 	});
 
 	const handleComponentUpdate = (_component: Component) => {
-		if (_component === Layers?.getRoot()) {
+		if (_component.getId() == Layers?.getRoot().getId()) {
 			updateRoot(_component);
 		}
 	};
@@ -148,7 +170,12 @@
 	const handleRoot = (_root: Component) => {
 		updateRoot(_root);
 		if (root) componentResolverMap[_root.getId()] = _root;
-		addToResolverMap(Layers?.getComponents(_root));
+		// addToResolverMap(Layers?.getComponents(_root));
+		const checkLength = Object.keys(componentResolverMap).length;
+		// console.log(checkLength);
+		if (checkLength <= 1) {
+			addToResolverMap(Layers?.getComponents(_root));
+		}
 	};
 
 	const addToResolverMap = (components: Component[] | undefined): void => {
@@ -169,9 +196,14 @@
 	provide('componentResolverMap', componentResolverMap);
 </script>
 <template>
-	<ul class="layer--wrapper">
-		<NewLayerItem :level="0" :component="root" :title="root?.getName()" :children="children" />
-	</ul>
+	<div class="layer--container">
+		<NewLayerItem
+			:isRoot="true"
+			:level="0"
+			:component="root"
+			:title="root?.getName()"
+			:children="children" />
+	</div>
 </template>
 
 <style>

@@ -7,10 +7,7 @@
 	} from '@arco-design/web-vue/es/icon';
 	import { Component, Editor, LayerData } from 'grapesjs';
 	import { toNumber } from 'lodash';
-	import { inject, onMounted, onUnmounted } from 'vue';
-	import { computed } from 'vue';
-	import { toRaw } from 'vue';
-	import { ref } from 'vue';
+	import { computed, inject, onMounted, onUnmounted, ref, toRaw } from 'vue';
 
 	const proxyEditor: Editor | undefined = inject('editor');
 	const editor = toRaw(proxyEditor);
@@ -21,6 +18,7 @@
 		component: Component | undefined;
 		children: Component[] | undefined;
 		level: Number;
+		isRoot: Boolean;
 	}>();
 	const name = ref();
 	const visible = ref(true);
@@ -83,11 +81,13 @@
 			Layers?.setVisible(props.component, !visible.value);
 		}
 	};
+
+	const canDrag = computed(() => props.component?.get('draggable'));
 </script>
 
 <template>
 	<li
-		class="layer--item"
+		:class="[isRoot ? '' : 'layer--item']"
 		:data-id="component?.getId()"
 		data-draggable
 		@click.stop="setSelected"
@@ -102,9 +102,10 @@
 				long
 				data-button>
 				<template #icon>
-					<IconCaretRight v-if="!show && hasChild" @click="toggle" />
-					<IconCaretDown v-if="show && hasChild" @click="toggle" />
-					<IconDragDotVertical class="ms-1" />
+					<IconCaretRight v-if="!show && hasChild && !isRoot" @click="toggle" />
+					<IconCaretDown v-if="show && hasChild && !isRoot" @click="toggle" />
+					<IconDragDotVertical v-if="!isRoot && canDrag" class="ms-1" />
+					<IconMindMapping v-if="isRoot" class="ms-1" />
 					<span class="ms-1">{{ component?.getIcon() }}</span>
 					<span class="ms-1">{{ title }}</span>
 				</template>
@@ -120,8 +121,9 @@
 		</div>
 		<ul class="layer--wrapper">
 			<NewLayerItem
-				v-for="component in children"
 				v-if="show"
+				v-for="component in children"
+				:isRoot="false"
 				:component="component"
 				:children="component ? Layers?.getComponents(component) : []"
 				:title="component.getName()"
@@ -151,7 +153,7 @@
 	.indent {
 		width: 1px;
 		height: 32px;
-		background-color: black;
+		background-color: var(--color-neutral-6);
 		margin-left: 20px;
 	}
 </style>
