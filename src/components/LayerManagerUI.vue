@@ -12,10 +12,10 @@
 	import {
 		computed,
 		inject,
+		nextTick,
 		onBeforeUnmount,
 		onMounted,
 		onUnmounted,
-		provide,
 		ref,
 		shallowRef,
 		toRaw,
@@ -98,10 +98,6 @@
 		}
 	};
 	const onDragOver = (e: DragOverEvent) => {
-		if (checkMove.value && !checkMove.value.result && indicatorEl.value) {
-			indicatorEl.value.classList.remove('indicator--before');
-			indicatorEl.value.classList.remove('indicator--after');
-		}
 		const layerOverItem = e.over.closest('[data-draggable]');
 		if (layerOverItem instanceof HTMLElement) {
 			const componentId = layerOverItem.dataset.id;
@@ -145,16 +141,19 @@
 		if (checkMove.value && checkMove.value?.result) {
 			const target = toRaw(checkMove.value.target);
 			const source = toRaw(checkMove.value.source);
-			source?.move(target, { at: currentOnDragOverLayerItem.value });
+			if (source) {
+				source?.move(target, { at: currentOnDragOverLayerItem.value });
+			}
 		}
-		draggingComponent.value = undefined;
-		draggOverComponent.value = undefined;
-		checkMove.value = undefined;
+		draggingComponent.value = {} as unknown as undefined;
+		draggOverComponent.value = {} as unknown as undefined;
+		checkMove.value = {} as unknown as undefined;
 		currentOnDragOverLayerItem.value = 0;
 		indicatorEl.value.classList.remove('indicator--before');
 		indicatorEl.value.classList.remove('indicator--after');
-		indicatorEl.value = undefined;
+		indicatorEl.value = {} as unknown as undefined;
 		root.value = clone(Layers?.getRoot());
+		nextTick();
 	};
 
 	onUnmounted(() => {
@@ -171,12 +170,11 @@
 	const handleRoot = (_root: Component) => {
 		updateRoot(_root);
 		if (root) componentResolverMap[_root.getId()] = _root;
-		// addToResolverMap(Layers?.getComponents(_root));
 		const checkLength = Object.keys(componentResolverMap).length;
-		// console.log(checkLength);
 		if (checkLength <= 1) {
 			addToResolverMap(Layers?.getComponents(_root));
 		}
+		nextTick();
 	};
 
 	const addToResolverMap = (components: Component[] | undefined): void => {
@@ -190,11 +188,10 @@
 
 	const updateRoot = (_root: Component) => {
 		root.value = clone(_root);
+		nextTick();
 	};
 
 	const children = computed(() => (root.value ? Layers?.getComponents(root.value) : []));
-
-	provide('componentResolverMap', componentResolverMap);
 </script>
 <template>
 	<div class="layer--container">
@@ -214,13 +211,16 @@
 		margin: 0;
 		padding: 0;
 	}
+
 	.layer--wrapper {
 		overflow-y: hidden;
 		overflow-x: auto;
 	}
+
 	.draggable-mirror .indent {
 		background-color: transparent;
 	}
+
 	/* .draggable-mirror .layer--header .layer--button {
 		border: 1px solid black;
 	} */
@@ -234,6 +234,7 @@
 		height: 3px;
 		box-shadow: inset 0px 2px 0px 0px rgb(var(--green-6));
 	}
+
 	.indicator--after::after {
 		content: '';
 		position: absolute;

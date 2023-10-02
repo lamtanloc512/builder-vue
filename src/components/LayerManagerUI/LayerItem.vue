@@ -6,7 +6,7 @@
 		IconEyeInvisible,
 	} from '@arco-design/web-vue/es/icon';
 	import { Component, Editor, LayerData } from 'grapesjs';
-	import { toNumber } from 'lodash';
+	import { clone, toNumber } from 'lodash';
 	import { computed, inject, onMounted, onUnmounted, ref, toRaw } from 'vue';
 
 	const proxyEditor: Editor | undefined = inject('editor');
@@ -28,7 +28,18 @@
 	const show = ref(true);
 	const toggle = () => (show.value = !show.value);
 	const hasChild = computed(() => (props.children ? props.children?.length > 0 : false));
-
+	const data = computed({
+		get: () => (props.component ? Layers?.getLayerData(props.component) : undefined),
+		set: (newValue) => {
+			if (newValue) {
+				name.value = newValue?.name;
+				open.value = newValue?.open;
+				visible.value = newValue?.visible;
+				selected.value = newValue?.selected;
+				hovered.value = newValue?.hovered;
+			}
+		},
+	});
 	onMounted(() => {
 		editor?.on('layer:component', handleComponentUpdate);
 	});
@@ -38,18 +49,15 @@
 	});
 
 	const handleComponentUpdate = (_component: Component) => {
-		if (_component === props.component) {
+		if (_component == props.component) {
 			updateLayerData(Layers?.getLayerData(props.component));
+			// nextTick();
 		}
 	};
 
-	const updateLayerData = (data: LayerData | undefined) => {
-		if (data) {
-			name.value = data.name;
-			visible.value = data.visible;
-			open.value = data.open;
-			selected.value = data.selected;
-			hovered.value = data.hovered;
+	const updateLayerData = (_data: LayerData | undefined) => {
+		if (_data) {
+			data.value = clone(_data);
 		}
 	};
 
@@ -123,6 +131,7 @@
 			<LayerItem
 				v-if="show"
 				v-for="component in children"
+				:key="component.getId()"
 				:isRoot="false"
 				:component="component"
 				:children="component ? Layers?.getComponents(component) : []"
