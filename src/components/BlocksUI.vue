@@ -1,19 +1,11 @@
 <script setup lang="ts">
 	import { Tabs, TabPane } from '@arco-design/web-vue';
-	import {
-		IconPlus,
-		IconLayers,
-		IconImage,
-	} from '@arco-design/web-vue/es/icon';
+	import { IconPlus, IconLayers, IconImage } from '@arco-design/web-vue/es/icon';
 	import LayerMangerUI from './LayerManagerUI.vue';
 </script>
 <template>
 	<div class="h-100">
-		<Tabs
-			id="blockUI"
-			class="h-100"
-			:defaultActiveKey="1"
-			:direction="'vertical'">
+		<Tabs id="blockUI" class="h-100" :defaultActiveKey="1" :direction="'vertical'">
 			<TabPane :key="1">
 				<template #title>
 					<div class="icon__wrapper">
@@ -28,7 +20,6 @@
 						<IconPlus class="icon" />
 					</div>
 				</template>
-				Content of Tab Panel 2
 			</TabPane>
 			<TabPane :key="3">
 				<template #title>
@@ -36,7 +27,6 @@
 						<IconImage class="icon" />
 					</div>
 				</template>
-				Content of Tab Panel 3
 			</TabPane>
 		</Tabs>
 		<slot></slot>

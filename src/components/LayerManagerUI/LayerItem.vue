@@ -95,12 +95,12 @@
 		<div class="layer--header">
 			<div v-for="_ in level" class="indent"></div>
 			<Button
+				long
+				type="text"
+				data-button
 				@mouseenter="onMouseEnter"
 				@mouseleave="onMouseLeave"
-				:class="['layer--button', selected ? 'selected' : '', hovered ? 'hover' : '']"
-				type="text"
-				long
-				data-button>
+				:class="['layer--button', selected ? 'selected' : '', hovered ? 'hover' : '']">
 				<template #icon>
 					<IconCaretRight v-if="!show && hasChild && !isRoot" @click="toggle" />
 					<IconCaretDown v-if="show && hasChild && !isRoot" @click="toggle" />
