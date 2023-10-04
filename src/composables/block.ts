@@ -6,14 +6,14 @@ import { isEmpty } from 'lodash';
  * @param overrideConfig = {};
  */
 export const useBlock = (defaultBlockId = '', overrideConfig = {} as BlockProperties) => {
-	let blockId = defaultBlockId;
+	let id = defaultBlockId;
 	if (isEmpty(defaultBlockId)) {
-		blockId = crypto.randomUUID();
+		id = crypto.randomUUID();
 	}
 
 	const config: BlockProperties = {
 		...overrideConfig,
 	};
 
-	return [blockId, config];
+	return { id, config };
 };

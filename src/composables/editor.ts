@@ -1,4 +1,5 @@
 import grapesjs, { Editor } from 'grapesjs';
+
 export const useEditor = (overrideProps = {}) => {
 	const node: HTMLElement = document.createElement('div');
 	node.innerHTML = `
@@ -9,7 +10,7 @@ export const useEditor = (overrideProps = {}) => {
 
 	const props = {
 		container: node,
-		fromElement: true,
+		fromElement: false,
 		width: 'auto',
 		storageManager: false,
 		height: '95vh',

@@ -35,11 +35,14 @@ const draggableStoppedEvent = 'drag:stopped';
 // const draggOuEvent = 'drag:out';
 // const draggOutContainerEvent = 'drag:out:container';
 
+const emit = defineEmits(['goToLayer']);
+
 let draggable: Draggable | undefined;
 
 onMounted(() => {
 	editor?.on('layer:root', handleRoot);
 	editor?.on('layer:component', handleComponentUpdate);
+	editor?.on('component:add', handleComponentAdd);
 	const wrapper = document.querySelectorAll('.layer--wrapper');
 	if (wrapper.length !== 0) {
 		draggable = new Draggable(wrapper, {
@@ -155,6 +158,7 @@ const onDragStopped = (_: DragStoppedEvent): void => {
 onUnmounted(() => {
 	editor?.off('layer:root', handleRoot);
 	editor?.off('layer:component', handleComponentUpdate);
+	editor?.off('component:add', handleComponentAdd);
 });
 
 const handleComponentUpdate = (_component: Component) => {
@@ -168,6 +172,11 @@ const handleRoot = (_root: Component) => {
 	componentResolverMap[_root.getId()] = _root;
 	addToResolverMap(Layers?.getComponents(_root));
 	nextTick();
+};
+
+const handleComponentAdd = (_component: Component) => {
+	componentResolverMap[_component.getId()] = _component;
+	emit('goToLayer');
 };
 
 const addToResolverMap = (components: Component[] | undefined): void => {

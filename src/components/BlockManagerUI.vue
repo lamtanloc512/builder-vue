@@ -6,7 +6,7 @@ import BlockProvider from './BlockManagerUI/BlockProvider.vue';
 	<BlockProvider #item="{ block, dragStart, dragstop }">
 		<div
 			:class="['text-center border p-2 grab']"
-			draggable="true"
+			:draggable="true"
 			@dragstart="() => dragStart(block)"
 			@dragstop="() => dragstop(block)">
 			<div class="w-100 text-center" :innerHTML="block?.getMedia()"></div>

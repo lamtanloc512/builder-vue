@@ -3,17 +3,24 @@ import { Tabs, TabPane } from '@arco-design/web-vue';
 import { IconPlus, IconLayers, IconImage } from '@arco-design/web-vue/es/icon';
 import LayerMangerUI from './LayerManagerUI.vue';
 import BlockManagerUI from './BlockManagerUI.vue';
+import { ref } from 'vue';
+
+const activeKey = ref<number>(2);
+
+const goToLayer = () => {
+	activeKey.value = 1;
+};
 </script>
 <template>
 	<div class="h-100">
-		<Tabs id="blockUI" class="h-100" :defaultActiveKey="2" :direction="'vertical'">
+		<Tabs id="blockUI" class="h-100" v-model:activeKey="activeKey" :direction="'vertical'">
 			<TabPane :key="1">
 				<template #title>
 					<div class="icon__wrapper">
 						<IconLayers class="icon" />
 					</div>
 				</template>
-				<LayerMangerUI />
+				<LayerMangerUI @goToLayer="goToLayer" />
 			</TabPane>
 			<TabPane :key="2">
 				<template #title>
