@@ -10,11 +10,12 @@
 	},
 	"dependencies": {
 		"@shopify/draggable": "^1.1.1",
+		"bootstrap-icons": "^1.11.1",
 		"grapesjs": "^0.21.5",
 		"pinia": "^2.1.6",
+		"tdesign-vue-next": "^1.5.7",
 		"vue": "^3.3.4",
-		"vuedraggable": "next",
-		"tdesign-vue-next": "^1.5.7"
+		"vuedraggable": "next"
 	},
 	"devDependencies": {
 		"@arco-design/web-vue": "^2.51.2",
