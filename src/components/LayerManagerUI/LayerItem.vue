@@ -1,96 +1,93 @@
 <script setup lang="ts">
-	import { Button } from '@arco-design/web-vue';
-	import {
-		IconCaretDown,
-		IconDragDotVertical,
-		IconEyeInvisible,
-	} from '@arco-design/web-vue/es/icon';
-	import { Component, Editor, LayerData } from 'grapesjs';
-	import { clone, toNumber } from 'lodash';
-	import { computed, inject, onMounted, onUnmounted, ref, toRaw } from 'vue';
+import Template from '../../plugins/Container/Template';
+import { Button } from '@arco-design/web-vue';
+import { IconCaretDown, IconDragDotVertical, IconEyeInvisible } from '@arco-design/web-vue/es/icon';
+import { Component, Editor, LayerData } from 'grapesjs';
+import { clone, toNumber } from 'lodash';
+import { computed, inject, onMounted, onUnmounted, ref, toRaw } from 'vue';
 
-	const proxyEditor: Editor | undefined = inject('editor');
-	const editor = toRaw(proxyEditor);
+const proxyEditor: Editor | undefined = inject('editor');
+const editor = toRaw(proxyEditor);
 
-	const Layers = editor?.Layers;
-	const props = defineProps<{
-		title: String;
-		component: Component | undefined;
-		children: Component[] | undefined;
-		level: Number;
-		isRoot: Boolean;
-	}>();
-	const name = ref();
-	const visible = ref(true);
-	const open = ref(false);
-	const selected = ref(false);
-	const hovered = ref(false);
-	const show = ref(true);
-	const toggle = () => (show.value = !show.value);
-	const hasChild = computed(() => (props.children ? props.children?.length > 0 : false));
-	const data = computed({
-		get: () => (props.component ? Layers?.getLayerData(props.component) : undefined),
-		set: (newValue) => {
-			if (newValue) {
-				name.value = newValue?.name;
-				open.value = newValue?.open;
-				visible.value = newValue?.visible;
-				selected.value = newValue?.selected;
-				hovered.value = newValue?.hovered;
-			}
-		},
-	});
-	onMounted(() => {
-		editor?.on('layer:component', handleComponentUpdate);
-	});
-
-	onUnmounted(() => {
-		editor?.off('layer:component', handleComponentUpdate);
-	});
-
-	const handleComponentUpdate = (_component: Component) => {
-		if (_component == props.component) {
-			updateLayerData(Layers?.getLayerData(props.component));
-			// nextTick();
+const Layers = editor?.Layers;
+const props = defineProps<{
+	title: String;
+	component: Component | undefined;
+	children: Component[] | undefined;
+	level: Number;
+	isRoot: Boolean;
+}>();
+const name = ref();
+const visible = ref(true);
+const open = ref(false);
+const selected = ref(false);
+const hovered = ref(false);
+const show = ref(true);
+const toggle = () => (show.value = !show.value);
+const hasChild = computed(() => (props.children ? props.children?.length > 0 : false));
+const data = computed({
+	get: () => (props.component ? Layers?.getLayerData(props.component) : undefined),
+	set: (newValue) => {
+		if (newValue) {
+			name.value = newValue?.name;
+			open.value = newValue?.open;
+			visible.value = newValue?.visible;
+			selected.value = newValue?.selected;
+			hovered.value = newValue?.hovered;
 		}
-	};
+	},
+});
+onMounted(() => {
+	editor?.on('layer:component', handleComponentUpdate);
+});
 
-	const updateLayerData = (_data: LayerData | undefined) => {
-		if (_data) {
-			data.value = clone(_data);
-		}
-	};
+onUnmounted(() => {
+	editor?.off('layer:component', handleComponentUpdate);
+});
 
-	const setSelected = (ev: MouseEvent) => {
-		if (props.component) {
-			Layers?.setLayerData(props.component, { selected: true }, { ev });
-		}
-	};
-	const setUnSelected = (ev: MouseEvent) => {
-		if (props.component) {
-			Layers?.setLayerData(props.component, { selected: true }, { ev });
-		}
-	};
+const handleComponentUpdate = (_component: Component) => {
+	if (_component == props.component) {
+		updateLayerData(Layers?.getLayerData(props.component));
+		// nextTick();
+	}
+};
 
-	const onMouseEnter = () => {
-		if (props.component) {
-			Layers?.setLayerData(props.component, { hovered: true });
-		}
-	};
+const updateLayerData = (_data: LayerData | undefined) => {
+	if (_data) {
+		data.value = clone(_data);
+	}
+};
 
-	const onMouseLeave = () => {
-		if (props.component) {
-			Layers?.setLayerData(props.component, { hovered: false });
-		}
-	};
+const setSelected = (ev: MouseEvent) => {
+	if (props.component) {
+		Layers?.setLayerData(props.component, { selected: true }, { ev });
+	}
+};
+const setUnSelected = (ev: MouseEvent) => {
+	if (props.component) {
+		Layers?.setLayerData(props.component, { selected: true }, { ev });
+	}
+};
 
-	const toggleVisible = () => {
-		if (props.component) {
-			Layers?.setVisible(props.component, !visible.value);
-		}
-	};
-	//@ts-ignore
-	const canDrag = computed(() => props.component?.get('draggable'));
+const onMouseEnter = () => {
+	if (props.component) {
+		Layers?.setLayerData(props.component, { hovered: true });
+	}
+};
+
+const onMouseLeave = () => {
+	if (props.component) {
+		Layers?.setLayerData(props.component, { hovered: false });
+	}
+};
+
+const toggleVisible = () => {
+	if (props.component) {
+		Layers?.setVisible(props.component, !visible.value);
+	}
+};
+//@ts-ignore
+const canDrag = computed(() => props.component?.get('draggable'));
 </script>
 
 <template>
@@ -142,27 +139,27 @@
 </template>
 
 <style scoped>
-	.layer--header {
-		display: flex;
-	}
-	.layer--button {
-		justify-content: space-between;
-		padding: 0px 12px;
-		color: var(--color-neutral-10);
-		position: relative;
-	}
-	.layer--button.selected {
-		box-shadow: inset 0 0 0 2px rgb(var(--arcoblue-7));
-		border-radius: 4px;
-	}
-	.layer--button.hover {
-		box-shadow: inset 0 0 0 2px rgb(var(--arcoblue-4));
-		border-radius: 4px;
-	}
-	.indent {
-		width: 1px;
-		height: 32px;
-		background-color: var(--color-neutral-6);
-		margin-left: 20px;
-	}
+.layer--header {
+	display: flex;
+}
+.layer--button {
+	justify-content: space-between;
+	padding: 0px 12px;
+	color: var(--color-neutral-10);
+	position: relative;
+}
+.layer--button.selected {
+	box-shadow: inset 0 0 0 2px rgb(var(--arcoblue-7));
+	border-radius: 4px;
+}
+.layer--button.hover {
+	box-shadow: inset 0 0 0 2px rgb(var(--arcoblue-4));
+	border-radius: 4px;
+}
+.indent {
+	width: 1px;
+	height: 32px;
+	background-color: var(--color-neutral-6);
+	margin-left: 20px;
+}
 </style>

@@ -9,7 +9,7 @@ import BlockProvider from './BlockManagerUI/BlockProvider.vue';
 			:draggable="true"
 			@dragstart="() => dragStart(block)"
 			@dragstop="() => dragstop(block)">
-			<div class="w-100 text-center" :innerHTML="block?.getMedia()"></div>
+			<div class="icon--wrapper" :innerHTML="block?.getMedia()"></div>
 		</div>
 	</BlockProvider>
 </template>
@@ -17,5 +17,13 @@ import BlockProvider from './BlockManagerUI/BlockProvider.vue';
 <style scoped>
 .grab {
 	cursor: grab;
+}
+.icon--wrapper {
+	display: grid;
+	place-items: center;
+}
+.icon--wrapper * {
+	height: 24px;
+	width: 24px;
 }
 </style>

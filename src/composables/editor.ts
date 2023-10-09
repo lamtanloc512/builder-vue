@@ -1,3 +1,4 @@
+import { Container } from './../plugins/Container/index';
 import grapesjs, { Editor } from 'grapesjs';
 
 export const useEditor = (overrideProps = {}) => {
@@ -11,9 +12,9 @@ export const useEditor = (overrideProps = {}) => {
 	const props = {
 		container: node,
 		fromElement: false,
-		width: 'auto',
+		width: '100%',
 		storageManager: false,
-		height: '95vh',
+		height: '100%',
 		selectorManager: {
 			componentFirst: true,
 			custom: true,
@@ -27,6 +28,7 @@ export const useEditor = (overrideProps = {}) => {
 		blockManager: {
 			custom: true,
 		},
+		plugins: [Container],
 		panels: { defaults: [] },
 		...overrideProps,
 	};
@@ -34,6 +36,7 @@ export const useEditor = (overrideProps = {}) => {
 	//@ts-ignore
 	const newEditor: Editor = grapesjs.init(props);
 
+	newEditor.addComponents({ type: 'container' });
 	const connect = (el: HTMLElement) => {
 		el ? el.appendChild(node) : '';
 	};

@@ -108,3 +108,16 @@ span.arco-tree-node-title-text {
 .gjs-selected-parent {
 	outline: 2px solid rgb(var(--arcoblue-6)) !important;
 }
+
+.gjs-one-bg {
+	background-color: transparent;
+}
+/* .gjs-two-color {
+	color: transparent;
+} */
+.gjs-mdl-container {
+	background-color: transparent;
+}
+.gjs-cv-canvas-bg {
+	background-color: transparent;
+}

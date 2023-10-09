@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Layout, LayoutHeader, LayoutContent, LayoutSider } from '@arco-design/web-vue';
+import { Layout, LayoutHeader, LayoutContent, LayoutSider, ResizeBox } from '@arco-design/web-vue';
 import { RightPanelUI, LeftPanelUI } from './components/index.ts';
 import { provide, ref } from 'vue';
 import AppLayout from './AppLayout.vue';
@@ -39,14 +39,17 @@ provide('editor', store.editor);
 					}">
 					<LeftPanelUI />
 				</LayoutSider>
-				<LayoutContent>
-					<div
-						:ref="
-							(el) => {
-								div = el;
-								store.connect(div);
-							}
-						"></div>
+				<LayoutContent class="w-100">
+					<ResizeBox
+						:class="['container--editor']"
+						:directions="['top', 'right', 'bottom', 'left']"
+						:style="{
+							width: '99%',
+							height: '97%',
+							textAlign: 'center',
+						}">
+						<div :class="['w-100 h-100']" :ref="(el) => store.connect(el as HTMLElement)"></div>
+					</ResizeBox>
 				</LayoutContent>
 				<LayoutSider
 					:style="{
@@ -63,4 +66,10 @@ provide('editor', store.editor);
 	</div>
 </template>
 
-<style></style>
+<style scoped>
+.container--editor {
+	display: grid;
+	place-items: center;
+	/* background-color: var(--color-neutral-4); */
+}
+</style>

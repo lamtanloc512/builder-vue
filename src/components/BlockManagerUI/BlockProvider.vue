@@ -15,7 +15,7 @@ onMounted(() => {
 	editor?.on('block:custom', handleBlocks);
 });
 onUnmounted(() => {
-	editor?.on('block:custom', handleBlocks);
+	editor?.off('block:custom', handleBlocks);
 });
 
 const handleBlocks = ({
@@ -62,7 +62,7 @@ if (Blocks) {
 .card--wrapper {
 	padding: 8px;
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: 1fr 1fr 1fr;
 	gap: 8px;
 }
 </style>
