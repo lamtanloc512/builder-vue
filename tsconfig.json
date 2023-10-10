@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES5",
     "useDefineForClassFields": true,
-    "module": "CommonJS",
+    "module": "ESNext",
     "lib": [
       "ES2020",
       "DOM",
@@ -22,8 +22,13 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "allowJs": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
   },
   "include": [
+    "src",
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",

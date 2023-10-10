@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import Template from '../../plugins/Container/Template';
 import { Button } from '@arco-design/web-vue';
 import { IconCaretDown, IconDragDotVertical, IconEyeInvisible } from '@arco-design/web-vue/es/icon';
 import { Component, Editor, LayerData } from 'grapesjs';

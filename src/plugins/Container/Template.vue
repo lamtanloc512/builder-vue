@@ -15,9 +15,9 @@ console.log(props);
 
 const columns = ref(0);
 
-const onClick = () => {
-	columns.value++;
-};
+// const onClick = () => {
+// 	columns.value++;
+// };
 </script>
 
 <template>
