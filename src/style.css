@@ -1,13 +1,20 @@
+@import url('../node_modules/tdesign-vue-next/dist/tdesign.min.css');
+@import url('../node_modules/grapesjs/dist/css/grapes.min.css');
 body {
 	height: 100vh;
 	width: 100vw;
 	overflow: hidden;
 }
+.gjs-cv-canvas {
+	top: 0;
+	width: 100%;
+	height: 100%;
+}
 
 .t-input__inner,
 .t-input__inner-pre {
-	font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-		Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
+	font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+		Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
 }
 
 .arco-collapse-item-content {
@@ -44,8 +51,8 @@ body {
 	padding: 0 !important;
 }
 #styleManager .custom-i18n {
-	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-		Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+		Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 /* .composite-group .arco-card-body {
@@ -83,4 +90,34 @@ span.arco-tree-node-title-text {
 
 .arco-tabs-left.arco-tabs-vertical .arco-tabs-content {
 	padding-left: 0;
+}
+
+.gjs-toolbar {
+	background-color: rgb(var(--arcoblue-6));
+}
+
+.gjs-selected {
+	outline: 2px solid rgb(var(--arcoblue-6));
+}
+
+.gjs-selected {
+	outline: 2px solid rgb(var(--arcoblue-6)) !important;
+	outline-offset: -2px;
+}
+
+.gjs-selected-parent {
+	outline: 2px solid rgb(var(--arcoblue-6)) !important;
+}
+
+.gjs-one-bg {
+	background-color: transparent;
+}
+/* .gjs-two-color {
+	color: transparent;
+} */
+.gjs-mdl-container {
+	background-color: transparent;
+}
+.gjs-cv-canvas-bg {
+	background-color: transparent;
 }

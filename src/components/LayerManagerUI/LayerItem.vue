@@ -1,55 +1,164 @@
 <script setup lang="ts">
-	import { MenuItem, SubMenu } from '@arco-design/web-vue';
-	import { IconApps } from '@arco-design/web-vue/es/icon';
-	import { ref } from 'vue';
+import { Button } from '@arco-design/web-vue';
+import { IconCaretDown, IconDragDotVertical, IconEyeInvisible } from '@arco-design/web-vue/es/icon';
+import { Component, Editor, LayerData } from 'grapesjs';
+import { clone, toNumber } from 'lodash';
+import { computed, inject, onMounted, onUnmounted, ref, toRaw } from 'vue';
 
-	const props = defineProps<{
-		component: Object;
-	}>();
+const proxyEditor: Editor | undefined = inject('editor');
+const editor = toRaw(proxyEditor);
 
-	const test = ref(false);
+const Layers = editor?.Layers;
+const props = defineProps<{
+	title: String;
+	component: Component | undefined;
+	children: Component[] | undefined;
+	level: Number;
+	isRoot: Boolean;
+}>();
+const name = ref();
+const visible = ref(true);
+const open = ref(false);
+const selected = ref(false);
+const hovered = ref(false);
+const show = ref(true);
+const toggle = () => (show.value = !show.value);
+const hasChild = computed(() => (props.children ? props.children?.length > 0 : false));
+const data = computed({
+	get: () => (props.component ? Layers?.getLayerData(props.component) : undefined),
+	set: (newValue) => {
+		if (newValue) {
+			name.value = newValue?.name;
+			open.value = newValue?.open;
+			visible.value = newValue?.visible;
+			selected.value = newValue?.selected;
+			hovered.value = newValue?.hovered;
+		}
+	},
+});
+onMounted(() => {
+	editor?.on('layer:component', handleComponentUpdate);
+});
+
+onUnmounted(() => {
+	editor?.off('layer:component', handleComponentUpdate);
+});
+
+const handleComponentUpdate = (_component: Component) => {
+	if (_component == props.component) {
+		updateLayerData(Layers?.getLayerData(props.component));
+		// nextTick();
+	}
+};
+
+const updateLayerData = (_data: LayerData | undefined) => {
+	if (_data) {
+		data.value = clone(_data);
+	}
+};
+
+const setSelected = (ev: MouseEvent) => {
+	if (props.component) {
+		Layers?.setLayerData(props.component, { selected: true }, { ev });
+	}
+};
+const setUnSelected = (ev: MouseEvent) => {
+	if (props.component) {
+		Layers?.setLayerData(props.component, { selected: true }, { ev });
+	}
+};
+
+const onMouseEnter = () => {
+	if (props.component) {
+		Layers?.setLayerData(props.component, { hovered: true });
+	}
+};
+
+const onMouseLeave = () => {
+	if (props.component) {
+		Layers?.setLayerData(props.component, { hovered: false });
+	}
+};
+
+const toggleVisible = () => {
+	if (props.component) {
+		Layers?.setVisible(props.component, !visible.value);
+	}
+};
+//@ts-ignore
+const canDrag = computed(() => props.component?.get('draggable'));
 </script>
 
 <template>
-	<div class="drop-zone">
-		<div
-			v-if="!test"
-			class="wrapper">
-			<div class="indent"></div>
-			<MenuItem
-				class="w-100 m-0"
-				key="1_0">
-				<template #icon><IconApps /></template>
-				<template #title>Navigation 2</template>
-				<div>Menu 1</div></MenuItem
-			>
+	<li
+		:class="[isRoot ? '' : 'layer--item']"
+		:data-id="component?.getId()"
+		data-draggable
+		@click.stop="setSelected"
+		@dblclick="setUnSelected">
+		<div class="layer--header">
+			<div v-for="_ in level" class="indent"></div>
+			<Button
+				long
+				type="text"
+				data-button
+				@mouseenter="onMouseEnter"
+				@mouseleave="onMouseLeave"
+				:class="['layer--button', selected ? 'selected' : '', hovered ? 'hover' : '']">
+				<template #icon>
+					<IconCaretRight v-if="!show && hasChild && !isRoot" @click="toggle" />
+					<IconCaretDown v-if="show && hasChild && !isRoot" @click="toggle" />
+					<IconDragDotVertical v-if="!isRoot && canDrag" class="ms-1" />
+					<IconMindMapping v-if="isRoot" class="ms-1" />
+					<span class="ms-1">{{ component?.getIcon() }}</span>
+					<span class="ms-1">{{ title }}</span>
+				</template>
+				<div class="d-flex justify-content-between align-items-center">
+					<div v-if="hovered || selected">
+						<IconEye v-if="visible" @click="toggleVisible" class="ms-2" />
+					</div>
+					<div v-if="!visible">
+						<IconEyeInvisible @click="toggleVisible" class="ms-2" />
+					</div>
+				</div>
+			</Button>
 		</div>
-
-		<SubMenu
-			v-if="test"
-			key="1">
-			<template #icon><IconApps /></template>
-			<template #title>Navigation 2</template>
-			<MenuItem key="1_0">Menu 1</MenuItem>
-			<MenuItem key="1_1">Menu 2</MenuItem>
-			<MenuItem key="1_2">Menu 3</MenuItem>
-		</SubMenu>
-	</div>
+		<ul class="layer--wrapper">
+			<LayerItem
+				v-if="show"
+				v-for="component in children"
+				:key="component.getId()"
+				:isRoot="false"
+				:component="component"
+				:children="component ? Layers?.getComponents(component) : []"
+				:title="component.getName()"
+				:level="toNumber(level) + 1" />
+		</ul>
+	</li>
 </template>
 
 <style scoped>
-	.wrapper {
-		display: flex;
-		justify-content: start;
-		align-items: center;
-		/* border-radius: 4px;
-		border: 1px solid black; */
-		padding: 4px 0;
-	}
-	.indent {
-		margin: 0 20px;
-		width: 1px;
-		height: 32px;
-		background-color: black;
-	}
+.layer--header {
+	display: flex;
+}
+.layer--button {
+	justify-content: space-between;
+	padding: 0px 12px;
+	color: var(--color-neutral-10);
+	position: relative;
+}
+.layer--button.selected {
+	box-shadow: inset 0 0 0 2px rgb(var(--arcoblue-7));
+	border-radius: 4px;
+}
+.layer--button.hover {
+	box-shadow: inset 0 0 0 2px rgb(var(--arcoblue-4));
+	border-radius: 4px;
+}
+.indent {
+	width: 1px;
+	height: 32px;
+	background-color: var(--color-neutral-6);
+	margin-left: 20px;
+}
 </style>

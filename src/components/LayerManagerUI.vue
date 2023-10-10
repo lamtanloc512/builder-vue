@@ -1,202 +1,250 @@
 <script setup lang="ts">
-	import { Tree, TreeNodeData } from '@arco-design/web-vue';
-	import { IconCaretDown, IconMinus } from '@arco-design/web-vue/es/icon';
-	import { Component, Editor } from 'grapesjs';
-	import { watchEffect } from 'vue';
-	import { onUnmounted } from 'vue';
-	import { inject, onMounted, ref } from 'vue';
+import {
+	BaseEvent,
+	DragMoveEvent,
+	DragOverEvent,
+	DragStartEvent,
+	DragStoppedEvent,
+	Draggable,
+} from '@shopify/draggable';
+import { CanMoveResult, Component, Editor } from 'grapesjs';
+import { clone } from 'lodash';
+import {
+	computed,
+	inject,
+	nextTick,
+	onBeforeUnmount,
+	onMounted,
+	onUnmounted,
+	ref,
+	shallowRef,
+	toRaw,
+} from 'vue';
+import LayerItem from './LayerManagerUI/LayerItem.vue';
 
-	const editor: Editor | undefined = inject('editor');
-	const Layers = editor?.Layers;
-	const Components = editor?.Components;
-	const currentComponent = ref();
-	const root = ref();
-	const layerData = ref();
-	const data = ref<TreeNodeData[]>();
-	const componentResolverMap = new Map<string, Component>();
+const proxyEditor: Editor | undefined = inject('editor');
+const editor = toRaw(proxyEditor);
+const Layers = editor?.Layers;
+const Components = editor?.Components;
+const root = shallowRef<Component | undefined>();
+const componentResolverMap: Record<string, Component> = {};
+const draggableStartEvent = 'drag:start';
+const draggableMoveEvent = 'drag:move';
+const draggableOverEvent = 'drag:over';
+const draggableStoppedEvent = 'drag:stopped';
+// const draggOuEvent = 'drag:out';
+// const draggOutContainerEvent = 'drag:out:container';
 
-	watchEffect(() => {
-		console.log(currentComponent.value);
-	});
+const emit = defineEmits(['goToLayer']);
 
-	onMounted(() => {
-		editor?.on('layer:root', handleRoot);
-		editor?.on('layer:component', onLayerComponentUpdate);
-		document.addEventListener('mouseover', hoverEvent);
-	});
-	onUnmounted(() => {
-		editor?.off('layer:root', handleRoot);
-		editor?.off('layer:component', onLayerComponentUpdate);
-		document.removeEventListener('mouseover', hoverEvent);
-	});
+let draggable: Draggable | undefined;
 
-	const hoverEvent = (e: MouseEvent) => {
-		const el = document
-			.elementFromPoint(e.clientX, e.clientY)
-			?.closest('[data-key]');
-		if (el instanceof HTMLElement) {
-			currentComponent.value = componentResolverMap.get(`${el?.dataset?.key}`);
-			if (currentComponent.value)
-				Layers?.setLayerData(currentComponent.value, { hovered: true });
-		}
-	};
-
-	const handleRoot = (_root: Component) => {
-		root.value = _root;
-		layerData.value = Layers?.getLayerData(_root);
-		componentResolverMap.set(_root.getId(), _root);
-		data.value = [
-			{
-				key: _root.getId(),
-				title: _root.getName(),
-				draggable: `${_root.get('draggable')}`,
-				children: [
-					...convertToTreeNode(Layers?.getLayerData(_root)?.components),
-				],
+onMounted(() => {
+	editor?.on('layer:root', handleRoot);
+	editor?.on('layer:component', handleComponentUpdate);
+	editor?.on('component:add', handleComponentAdd);
+	const wrapper = document.querySelectorAll('.layer--wrapper');
+	if (wrapper.length !== 0) {
+		draggable = new Draggable(wrapper, {
+			draggable: '.layer--item',
+			mirror: {
+				appendTo: 'body',
+				constrainDimensions: true,
 			},
-		];
-	};
-
-	const setSelected = (
-		selectedKeys: (string | number)[],
-		data: {
-			selected?: boolean | undefined;
-			selectedNodes: TreeNodeData[];
-			node?: TreeNodeData | undefined;
-			e?: Event | undefined;
-		},
-	) => {
-		currentComponent.value = componentResolverMap.get(`${selectedKeys}`);
-		if (currentComponent.value) {
-			Layers?.setLayerData(
-				currentComponent.value,
-				{ selected: true },
-				{ event: data.e },
-			);
-		}
-	};
-
-	const onLayerComponentUpdate = (_component: Component | undefined) => {
-		const elist = document.querySelectorAll('.tree-node-hovered');
-		elist.forEach((el) => {
-			el.classList.remove('tree-node-hovered');
+			delay: {
+				mouse: 250,
+				drag: 0,
+				touch: 100,
+			},
 		});
-		currentComponent.value = _component;
-		const el = document.querySelector(
-			`[data-key="${currentComponent.value.getId()}"]`,
-		);
-		if (el) {
-			el.classList.add('tree-node-hovered');
-		}
-	};
 
-	const convertToTreeNode = (
-		components: Component[] | undefined,
-	): TreeNodeData[] => {
-		if (!components || components.length == 0) return [];
-		return components.map((el: Component): any => {
-			componentResolverMap.set(el.getId(), el);
-			return {
-				key: el.getId(),
-				title: el.getName(),
-				draggable: el.get('draggable'),
-				children: convertToTreeNode(Layers?.getComponents(el)),
-			};
-		});
-	};
+		draggable.on(draggableStartEvent, onDragStart);
+		draggable.on(draggableMoveEvent, onDragMove);
+		draggable.on(draggableOverEvent, onDragOver);
+		//@ts-ignore
+		draggable.on(draggableStoppedEvent, onDragStopped);
+		// draggable.on(draggOuEvent, function (e) {
+		// 	console.log(draggOuEvent, e);
+		// });
+		// draggable.on(draggOutContainerEvent, function (e) {
+		// 	console.log(draggOutContainerEvent, e);
+		// });
+	}
+});
 
-	const onDrop = ({
-		e,
-		dragNode,
-		dropNode,
-		dropPosition,
-	}: {
-		e: DragEvent;
-		dragNode: TreeNodeData;
-		dropNode: TreeNodeData;
-		dropPosition: number;
-	}) => {
-		const _dragComponent = componentResolverMap.get(`${dragNode.key}`);
-		const _dropComponent = componentResolverMap.get(`${dropNode.key}`);
-		if (!_dragComponent || !_dropComponent) return;
-		const componentIndex = _dragComponent.index() + dropPosition;
-		const canMove = Components?.canMove(
-			_dropComponent,
-			_dragComponent,
-			componentIndex,
-		);
+onBeforeUnmount(() => {
+	if (draggable) draggable.destroy();
+});
 
-		if (canMove && canMove.result) {
-			const _data = data.value;
-			const loop = (
-				_data: TreeNodeData[] | undefined,
-				key: string | number | undefined,
-				callback: any,
-			) => {
-				_data?.some(
-					(item: TreeNodeData, index: number, arr: TreeNodeData[]) => {
-						if (item.key === key) {
-							callback(item, index, arr);
-							return true;
-						}
-						if (item.children) return loop(item.children, key, callback);
-						return false;
-					},
-				);
-			};
+const draggingComponent = ref<Component | undefined>();
+const draggOverComponent = ref<Component | undefined>();
+const checkMove = ref<CanMoveResult | undefined>();
+const currentOnDragOverLayerItem = ref(0);
+const indicatorEl = ref();
 
-			loop(
-				_data,
-				dragNode.key,
-				(_: TreeNodeData, index: number, arr: any[]): any => {
-					arr.splice(index, 1);
-				},
-			);
-
-			if (dropPosition === 0) {
-				loop(_data, dropNode.key, (item: TreeNodeData) => {
-					item.children = item.children || [];
-					item.children.push(dragNode);
-				});
-			} else {
-				loop(
-					_data,
-					dropNode.key,
-					(_: TreeNodeData, index: number, arr: TreeNodeData[]) => {
-						arr.splice(dropPosition < 0 ? index : index + 1, 0, dragNode);
-					},
-				);
+const onDragStart = (e: DragStartEvent): void => {
+	const layerItem = e.source.closest('[data-draggable]');
+	if (layerItem instanceof HTMLElement) {
+		const componentId = layerItem.dataset.id;
+		draggingComponent.value = toRaw(componentResolverMap[`${componentId}`]);
+	}
+};
+const onDragMove = (e: DragMoveEvent): void => {
+	if (e.originalEvent instanceof MouseEvent) {
+		const currentEl = e.originalEvent.target as HTMLElement;
+		if (currentEl && currentEl.getAttribute('class') == 'gjs-frame') {
+			if (draggable) {
+				const baseEvent = draggable as unknown as BaseEvent;
+				baseEvent.cancel();
 			}
-			_dragComponent.move(_dropComponent, { at: componentIndex });
 		}
-	};
+	}
+};
+const onDragOver = (e: DragOverEvent) => {
+	const layerOverItem = e.over.closest('[data-draggable]');
+	if (layerOverItem instanceof HTMLElement) {
+		const componentId = layerOverItem.dataset.id;
+		draggOverComponent.value = toRaw(componentResolverMap[`${componentId}`]);
+		if (draggOverComponent.value) {
+			const childs = Layers?.getComponents(draggOverComponent.value);
+			const hasChild = childs ? childs.length > 0 : false;
+			// @ts-ignore
+			const droppable = draggOverComponent.value.get('droppable');
+			if (hasChild || droppable) {
+				checkMove.value = Components?.canMove(draggOverComponent.value, draggingComponent.value, 1);
+			} else {
+				const draggOverParent = draggOverComponent.value.parent();
+				const layerRect = layerOverItem.getBoundingClientRect();
+				const layerH = layerOverItem.offsetHeight;
+				const pointerY = e.originalEvent instanceof MouseEvent ? e.originalEvent.clientY : null;
+				const isBefore = pointerY ? pointerY < layerRect.y + layerH / 2 : false;
+				indicatorEl.value = layerOverItem.querySelector('[data-button]');
+				if (indicatorEl.value && draggOverComponent.value != draggingComponent.value) {
+					if (isBefore) indicatorEl.value?.classList.add('indicator--before');
+					else indicatorEl.value?.classList.add('indicator--after');
+				}
+				currentOnDragOverLayerItem.value = draggOverComponent.value.index() + (isBefore ? 0 : 1);
+				checkMove.value = draggOverParent
+					? Components?.canMove(
+							draggOverParent,
+							draggingComponent.value,
+							currentOnDragOverLayerItem.value
+					  )
+					: undefined;
+			}
+		}
+	}
+};
+
+const onDragStopped = (_: DragStoppedEvent): void => {
+	if (checkMove.value && checkMove.value?.result) {
+		const target = toRaw(checkMove.value.target);
+		const source = toRaw(checkMove.value.source);
+		if (source) {
+			source?.move(target, { at: currentOnDragOverLayerItem.value });
+		}
+	}
+	draggingComponent.value = {} as unknown as undefined;
+	draggOverComponent.value = {} as unknown as undefined;
+	checkMove.value = {} as unknown as undefined;
+	currentOnDragOverLayerItem.value = 0;
+	indicatorEl.value.classList.remove('indicator--before');
+	indicatorEl.value.classList.remove('indicator--after');
+	indicatorEl.value = {} as unknown as undefined;
+	root.value = clone(Layers?.getRoot());
+	nextTick();
+};
+
+onUnmounted(() => {
+	editor?.off('layer:root', handleRoot);
+	editor?.off('layer:component', handleComponentUpdate);
+	editor?.off('component:add', handleComponentAdd);
+});
+
+const handleComponentUpdate = (_component: Component) => {
+	if (_component == Layers?.getRoot()) {
+		updateRoot(_component);
+	}
+};
+
+const handleRoot = (_root: Component) => {
+	updateRoot(_root);
+	componentResolverMap[_root.getId()] = _root;
+	addToResolverMap(Layers?.getComponents(_root));
+	nextTick();
+};
+
+const handleComponentAdd = (_component: Component) => {
+	componentResolverMap[_component.getId()] = _component;
+	emit('goToLayer');
+};
+
+const addToResolverMap = (components: Component[] | undefined): void => {
+	components?.forEach((el: Component): any => {
+		componentResolverMap[el.getId()] = el;
+		if (el.components.length > 0) {
+			addToResolverMap(Layers?.getComponents(el));
+		}
+	});
+};
+
+const updateRoot = (_root: Component) => {
+	root.value = clone(_root);
+	nextTick();
+};
+
+const children = computed(() => (root.value ? Layers?.getComponents(root.value) : []));
 </script>
 <template>
-	<div>
-		<Tree
-			v-if="data"
-			draggable
-			showLine
-			blockNode
-			:data="data"
-			:size="'medium'"
-			:hovered="true"
-			@select="setSelected"
-			@drop="onDrop">
-			<template #switcher-icon="_, { isLeaf }">
-				<IconCaretDown v-if="!isLeaf" />
-				<IconMinus v-if="isLeaf" />
-			</template>
-		</Tree>
+	<div class="layer--container">
+		<LayerItem
+			:isRoot="true"
+			:level="0"
+			:component="root"
+			:title="root?.getName()"
+			:children="children" />
 	</div>
 </template>
+
 <style>
-	.tree-node-hovered {
-		box-shadow: inset 0 0 0 1px rgb(var(--arcoblue-6));
-		border-radius: 4px;
-		z-index: 10000;
-	}
-	.arco-tree-node-title:hover {
-		background-color: unset;
-	}
+ul,
+li {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+
+.layer--wrapper {
+	overflow-y: hidden;
+	overflow-x: auto;
+}
+
+.draggable-mirror .indent {
+	background-color: transparent;
+}
+
+/* .draggable-mirror .layer--header .layer--button {
+		border: 1px solid black;
+	} */
+.indicator--before::before {
+	position: absolute;
+	content: '';
+	top: 0;
+	right: 0;
+	left: 0;
+	width: 100%;
+	height: 3px;
+	box-shadow: inset 0px 2px 0px 0px rgb(var(--green-6));
+}
+
+.indicator--after::after {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	left: 0;
+	width: 100%;
+	height: 3px;
+	box-shadow: inset 0px 2px 0px 0px rgb(var(--green-6));
+}
 </style>

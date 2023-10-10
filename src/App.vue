@@ -1,17 +1,12 @@
 <script setup lang="ts">
-	import {
-		Layout,
-		LayoutHeader,
-		LayoutContent,
-		LayoutSider,
-	} from '@arco-design/web-vue';
-	import { PanelUI, BlocksUI } from './components/index.ts';
-	import { provide, ref } from 'vue';
-	import AppLayout from './AppLayout.vue';
-	import { useAppStore } from './store/editorStore.ts';
-	const div = ref();
-	const store = useAppStore();
-	provide('editor', store.editor);
+import { Layout, LayoutHeader, LayoutContent, LayoutSider, ResizeBox } from '@arco-design/web-vue';
+import { RightPanelUI, LeftPanelUI } from './components/index.ts';
+import { provide, ref } from 'vue';
+import AppLayout from './AppLayout.vue';
+import { useAppStore } from './store/editorStore.ts';
+const div = ref();
+const store = useAppStore();
+provide('editor', store.editor);
 </script>
 
 <template>
@@ -42,38 +37,39 @@
 						overflowX: 'auto',
 						borderRight: '1px solid var(--color-border-2)',
 					}">
-					<BlocksUI />
+					<LeftPanelUI />
 				</LayoutSider>
-				<LayoutContent>
-					<div
-						:ref="
-							(el) => {
-								div = el;
-								store.connect(div);
-							}
-						"></div>
+				<LayoutContent class="w-100">
+					<ResizeBox
+						:class="['container--editor']"
+						:directions="['top', 'right', 'bottom', 'left']"
+						:style="{
+							width: '99%',
+							height: '97%',
+							textAlign: 'center',
+						}">
+						<div :class="['w-100 h-100']" :ref="(el) => store.connect(el as HTMLElement)"></div>
+					</ResizeBox>
 				</LayoutContent>
 				<LayoutSider
 					:style="{
-						minWidth: '280px',
+						minWidth: '260px',
 						height: '100%',
 						borderLeft: '1px solid var(--color-border-2)',
 						backgroundColor: 'var(--color-fill-2)',
 						padding: '8px',
 					}">
-					<PanelUI />
+					<RightPanelUI />
 				</LayoutSider>
 			</Layout>
 		</AppLayout>
 	</div>
 </template>
 
-<style>
-	@import url('https://unpkg.com/grapesjs/dist/css/grapes.min.css');
-
-	.gjs-cv-canvas {
-		top: 0;
-		width: 100%;
-		height: 100%;
-	}
+<style scoped>
+.container--editor {
+	display: grid;
+	place-items: center;
+	/* background-color: var(--color-neutral-4); */
+}
 </style>

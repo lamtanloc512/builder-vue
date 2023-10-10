@@ -14,14 +14,12 @@
 		sectorProperty: Property;
 	}>();
 
-	const emit = defineEmits({
-		reset: [],
-	});
+	const emit = defineEmits(['reset']);
 
 	const colorValue = ref(
 		props.sectorProperty.hasValue()
 			? props.sectorProperty.getValue()
-			: props.sectorProperty.getDefaultValue(),
+			: props.sectorProperty.getDefaultValue()
 	);
 	const recentColors = ref([
 		'red',

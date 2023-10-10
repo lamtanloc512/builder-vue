@@ -1,7 +1,7 @@
-import PanelUI from './PanelUI.vue';
+import RightPanelUI from './RightPanelUI.vue';
 import SelectorUI from './SelectorUI.vue';
 import StyleManagerUI from './StyleManagerUI.vue';
 import PropertyField from './StyleManagerUI/PropertyField.vue';
-import BlocksUI from './BlocksUI.vue';
+import LeftPanelUI from './LeftPanelUI.vue';
 
-export { PanelUI, SelectorUI, StyleManagerUI, PropertyField, BlocksUI };
+export { RightPanelUI, SelectorUI, StyleManagerUI, PropertyField, LeftPanelUI };
